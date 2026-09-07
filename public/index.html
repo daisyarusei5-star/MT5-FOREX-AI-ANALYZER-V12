@@ -1,1882 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<meta name="theme-color" content="#05070b">
-
-<title>MT5 FOREX AI ANALYZER V12</title>
-
-<style>
-*{
-  box-sizing:border-box;
-}
-
-html,body{
-  margin:0;
-  padding:0;
-  min-height:100%;
-  font-family:Arial,Helvetica,sans-serif;
-  background:#05070b;
-  color:#f4f7fb;
-}
-
-body{
-  overflow-x:hidden;
-}
-
-.hidden{
-  display:none!important;
-}
-
-button,
-input,
-select{
-  font:inherit;
-}
-
-button{
-  cursor:pointer;
-}
-
-button:disabled{
-  cursor:not-allowed;
-  opacity:.55;
-}
-
-/* ==============================
-   LOGIN
-============================== */
-
-#loginScreen{
-  min-height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:20px;
-  background:
-    radial-gradient(circle at top,#172033 0,#080b12 45%,#030407 100%);
-}
-
-.loginCard{
-  width:100%;
-  max-width:430px;
-  padding:30px;
-  border:1px solid #273348;
-  border-radius:24px;
-  background:rgba(9,13,21,.96);
-  box-shadow:
-    0 25px 80px rgba(0,0,0,.65),
-    inset 0 1px rgba(255,255,255,.04);
-}
-
-.logo{
-  text-align:center;
-  font-size:29px;
-  font-weight:900;
-  letter-spacing:.5px;
-  margin-bottom:8px;
-}
-
-.logo span{
-  color:#00ff9d;
-}
-
-.powered{
-  text-align:center;
-  color:#8c99ac;
-  font-size:12px;
-  font-weight:bold;
-  letter-spacing:1px;
-  margin-bottom:30px;
-}
-
-.loginTitle{
-  text-align:center;
-  margin:0 0 20px;
-  font-size:20px;
-}
-
-.inputGroup{
-  margin-bottom:14px;
-}
-
-.inputGroup label{
-  display:block;
-  color:#9aa8bc;
-  font-size:12px;
-  margin-bottom:7px;
-}
-
-.inputGroup input{
-  width:100%;
-  padding:14px;
-  border-radius:12px;
-  border:1px solid #2a3548;
-  outline:none;
-  background:#070b12;
-  color:#fff;
-}
-
-.inputGroup input:focus{
-  border-color:#00d98b;
-  box-shadow:0 0 0 3px rgba(0,255,157,.08);
-}
-
-.primary{
-  width:100%;
-  border:0;
-  border-radius:12px;
-  padding:14px;
-  background:linear-gradient(135deg,#00ff9d,#00b878);
-  color:#001b11;
-  font-weight:900;
-}
-
-.loginStatus{
-  min-height:22px;
-  margin-top:12px;
-  text-align:center;
-  font-size:13px;
-}
-
-.error{
-  color:#ff5d6c;
-}
-
-.success{
-  color:#00ff9d;
-}
-
-.loginFooter{
-  text-align:center;
-  margin-top:20px;
-  color:#7f8ba0;
-  font-size:12px;
-}
-
-.loginFooter a{
-  color:#00ff9d;
-  text-decoration:none;
-}
-
-/* ==============================
-   APP
-============================== */
-
-#app{
-  min-height:100vh;
-}
-
-header{
-  position:sticky;
-  top:0;
-  z-index:20;
-  padding:14px 18px;
-  border-bottom:1px solid #202a39;
-  background:rgba(5,7,11,.95);
-  backdrop-filter:blur(15px);
-}
-
-.headerInner{
-  max-width:1500px;
-  margin:auto;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:15px;
-}
-
-.brand{
-  font-weight:900;
-}
-
-.brandMain{
-  font-size:18px;
-}
-
-.brandMain span{
-  color:#00ff9d;
-}
-
-.brandSub{
-  margin-top:3px;
-  color:#7f8ba0;
-  font-size:10px;
-  letter-spacing:.7px;
-}
-
-.headerRight{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  flex-wrap:wrap;
-}
-
-.statusBadge{
-  padding:7px 10px;
-  border-radius:999px;
-  border:1px solid #273348;
-  background:#0b1019;
-  color:#9ca9bb;
-  font-size:11px;
-  font-weight:bold;
-}
-
-.statusBadge.online{
-  color:#00ff9d;
-  border-color:#0d694d;
-}
-
-.statusBadge.offline{
-  color:#ff6875;
-  border-color:#69313a;
-}
-
-.container{
-  width:min(1500px,calc(100% - 28px));
-  margin:18px auto 50px;
-}
-
-.grid{
-  display:grid;
-  grid-template-columns:repeat(12,1fr);
-  gap:14px;
-}
-
-.card{
-  grid-column:span 4;
-  padding:16px;
-  border:1px solid #202a39;
-  border-radius:17px;
-  background:#090d15;
-  box-shadow:0 12px 30px rgba(0,0,0,.18);
-}
-
-.card.wide{
-  grid-column:span 8;
-}
-
-.card.full{
-  grid-column:span 12;
-}
-
-@media(max-width:1050px){
-  .card,
-  .card.wide{
-    grid-column:span 6;
-  }
-}
-
-@media(max-width:700px){
-  .card,
-  .card.wide,
-  .card.full{
-    grid-column:span 12;
-  }
-
-  .headerInner{
-    align-items:flex-start;
-    flex-direction:column;
-  }
-
-  .container{
-    width:min(100% - 18px,1500px);
-  }
-}
-
-.cardTitle{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:10px;
-  margin-bottom:14px;
-  font-size:14px;
-  font-weight:900;
-}
-
-.cardTitle small{
-  color:#718096;
-  font-size:10px;
-  font-weight:normal;
-}
-
-.controls{
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:10px;
-}
-
-.control{
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-}
-
-.control label{
-  color:#8190a6;
-  font-size:10px;
-  text-transform:uppercase;
-  letter-spacing:.5px;
-}
-
-.control select,
-.control input{
-  width:100%;
-  padding:11px;
-  color:#fff;
-  background:#060a10;
-  border:1px solid #293447;
-  border-radius:10px;
-  outline:none;
-}
-
-.control select:focus,
-.control input:focus{
-  border-color:#00d98b;
-}
-
-.btn{
-  border:1px solid #2a3548;
-  background:#0c121c;
-  color:#fff;
-  padding:10px 13px;
-  border-radius:10px;
-  font-weight:bold;
-}
-
-.btn:hover{
-  border-color:#00d98b;
-}
-
-.btn.green{
-  border-color:#0d6a4c;
-  color:#00ff9d;
-}
-
-.btn.red{
-  border-color:#6d2e38;
-  color:#ff6572;
-}
-
-.btn.blue{
-  color:#65a9ff;
-  border-color:#2e4e76;
-}
-
-/* ==============================
-   MARKET
-============================== */
-
-.priceBox{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:15px;
-  padding:15px;
-  border-radius:13px;
-  background:#060a10;
-  border:1px solid #202a39;
-}
-
-.price{
-  font-size:27px;
-  font-weight:900;
-}
-
-.priceMeta{
-  text-align:right;
-  color:#8794a8;
-  font-size:11px;
-}
-
-.priceMeta strong{
-  display:block;
-  color:#fff;
-  font-size:13px;
-}
-
-.statGrid{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:8px;
-  margin-top:10px;
-}
-
-.stat{
-  padding:10px;
-  border-radius:10px;
-  background:#070b12;
-  border:1px solid #1e2837;
-}
-
-.stat label{
-  display:block;
-  color:#748197;
-  font-size:9px;
-  margin-bottom:5px;
-}
-
-.stat strong{
-  font-size:13px;
-}
-
-/* ==============================
-   TECHNICAL
-============================== */
-
-.indicatorGrid{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:8px;
-}
-
-.indicator{
-  padding:10px;
-  border-radius:10px;
-  background:#070b12;
-  border:1px solid #202a39;
-}
-
-.indicator label{
-  display:block;
-  color:#748197;
-  font-size:9px;
-  margin-bottom:4px;
-}
-
-.indicator strong{
-  font-size:12px;
-}
-
-.good{
-  color:#00ff9d;
-}
-
-.bad{
-  color:#ff6875;
-}
-
-.warn{
-  color:#ffc857;
-}
-
-.neutral{
-  color:#aeb9ca;
-}
-
-/* ==============================
-   GRAPH
-============================== */
-
-.chartWrap{
-  position:relative;
-  width:100%;
-  height:370px;
-  overflow:hidden;
-  border-radius:13px;
-  border:1px solid #202a39;
-  background:#05080d;
-}
-
-#chart{
-  width:100%;
-  height:100%;
-  display:block;
-}
-
-.chartLegend{
-  display:flex;
-  flex-wrap:wrap;
-  gap:10px;
-  margin-top:9px;
-  color:#8491a5;
-  font-size:10px;
-}
-
-/* ==============================
-   AI
-============================== */
-
-.aiGrid{
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:9px;
-}
-
-@media(max-width:600px){
-  .aiGrid{
-    grid-template-columns:1fr;
-  }
-}
-
-.aiRow{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  padding:11px;
-  border:1px solid #202a39;
-  border-radius:11px;
-  background:#070b12;
-}
-
-.aiName{
-  font-weight:bold;
-  font-size:12px;
-}
-
-.aiAction{
-  font-size:11px;
-  font-weight:900;
-}
-
-.aiConfidence{
-  color:#8b98ac;
-  font-size:10px;
-}
-
-.aiStatus{
-  margin-top:10px;
-  color:#7f8da2;
-  font-size:11px;
-}
-
-/* ==============================
-   CONSENSUS
-============================== */
-
-.consensusBox{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:10px;
-}
-
-.consensusItem{
-  text-align:center;
-  padding:15px 8px;
-  border-radius:12px;
-  background:#070b12;
-  border:1px solid #202a39;
-}
-
-.consensusItem strong{
-  display:block;
-  font-size:23px;
-}
-
-.consensusItem span{
-  color:#78869b;
-  font-size:10px;
-}
-
-/* ==============================
-   FINAL DECISION
-============================== */
-
-.finalDecision{
-  text-align:center;
-  padding:20px;
-  border-radius:15px;
-  border:1px solid #273348;
-  background:
-    radial-gradient(circle at top,#121b2b,#080c14 70%);
-}
-
-.finalAction{
-  font-size:38px;
-  font-weight:1000;
-  letter-spacing:1px;
-}
-
-.finalAction.BUY{
-  color:#00ff9d;
-}
-
-.finalAction.SELL{
-  color:#ff5f6d;
-}
-
-.finalAction.WAIT{
-  color:#ffc857;
-}
-
-.confidence{
-  font-size:26px;
-  font-weight:900;
-  margin-top:5px;
-}
-
-.entryGrid{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:8px;
-  margin-top:15px;
-}
-
-.entryItem{
-  padding:11px;
-  background:#070b12;
-  border:1px solid #202a39;
-  border-radius:10px;
-}
-
-.entryItem label{
-  display:block;
-  color:#768399;
-  font-size:9px;
-  margin-bottom:5px;
-}
-
-.entryItem strong{
-  font-size:13px;
-}
-
-/* ==============================
-   NEWS
-============================== */
-
-.newsTimer{
-  padding:15px;
-  border-radius:12px;
-  background:#070b12;
-  border:1px solid #202a39;
-  text-align:center;
-}
-
-.newsCountdown{
-  font-size:29px;
-  font-weight:900;
-}
-
-.newsMode{
-  margin-top:5px;
-  color:#00ff9d;
-  font-size:11px;
-  font-weight:bold;
-}
-
-.newsList{
-  margin-top:10px;
-  display:flex;
-  flex-direction:column;
-  gap:7px;
-}
-
-.newsItem{
-  padding:10px;
-  border-radius:9px;
-  background:#070b12;
-  border:1px solid #202a39;
-  font-size:11px;
-}
-
-.newsItem strong{
-  color:#fff;
-}
-
-.newsItem span{
-  color:#77859a;
-}
-
-/* ==============================
-   SAFETY
-============================== */
-
-.safetyGrid{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:8px;
-}
-
-.safety{
-  padding:10px;
-  border-radius:10px;
-  background:#070b12;
-  border:1px solid #202a39;
-}
-
-.safety label{
-  display:block;
-  color:#78869a;
-  font-size:9px;
-  margin-bottom:5px;
-}
-
-.safety strong{
-  font-size:11px;
-}
-
-/* ==============================
-   LOG
-============================== */
-
-.logBox{
-  height:210px;
-  overflow:auto;
-  padding:10px;
-  border-radius:10px;
-  background:#030507;
-  border:1px solid #1b2431;
-  font-family:monospace;
-  font-size:10px;
-  line-height:1.65;
-}
-
-.logLine{
-  color:#8190a4;
-}
-
-.logLine.ok{
-  color:#00ff9d;
-}
-
-.logLine.error{
-  color:#ff6572;
-}
-
-.logLine.warn{
-  color:#ffc857;
-}
-
-.logLine.info{
-  color:#65a9ff;
-}
-
-/* ==============================
-   FOOTER
-============================== */
-
-.footer{
-  text-align:center;
-  color:#657287;
-  font-size:10px;
-  margin-top:25px;
-}
-
-.footer a{
-  color:#00ff9d;
-  text-decoration:none;
-}
-
-/* ==============================
-   CONNECTION
-============================== */
-
-.connectionBar{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  padding:10px 12px;
-  margin-bottom:14px;
-  border-radius:11px;
-  background:#070b12;
-  border:1px solid #202a39;
-  font-size:11px;
-}
-
-.connectionDot{
-  width:8px;
-  height:8px;
-  display:inline-block;
-  border-radius:50%;
-  background:#ff5363;
-  margin-right:6px;
-}
-
-.connectionDot.online{
-  background:#00ff9d;
-  box-shadow:0 0 10px #00ff9d;
-}
-
-/* ==============================
-   MOBILE
-============================== */
-
-@media(max-width:600px){
-
-  .controls{
-    grid-template-columns:1fr;
-  }
-
-  .indicatorGrid{
-    grid-template-columns:repeat(2,1fr);
-  }
-
-  .entryGrid{
-    grid-template-columns:1fr;
-  }
-
-  .safetyGrid{
-    grid-template-columns:1fr;
-  }
-
-  .chartWrap{
-    height:290px;
-  }
-
-  .finalAction{
-    font-size:31px;
-  }
-}
-</style>
-</head>
-
-<body>
-
-<!-- =========================================================
-     LOGIN
-========================================================= -->
-
-<section id="loginScreen">
-
-  <div class="loginCard">
-
-    <div class="logo">
-      🔥 MT5 <span>FOREX AI</span> ANALYZER V12
-    </div>
-
-    <div class="powered">
-      POWERED BY ELISY ANALYSIS DEVELOPER
-    </div>
-
-    <h2 class="loginTitle">
-      🔐 SECURE LOGIN
-    </h2>
-
-    <div class="inputGroup">
-
-      <label>BOT PASSWORD</label>
-
-      <input
-        id="password"
-        type="password"
-        autocomplete="current-password"
-        placeholder="Enter bot password"
-      >
-
-    </div>
-
-    <button
-      id="loginBtn"
-      class="primary"
-      type="button"
-    >
-      🔐 LOGIN
-    </button>
-
-    <div
-      id="loginError"
-      class="loginStatus error"
-    ></div>
-
-    <div class="loginFooter">
-      📱 Support:
-      <a
-        href="https://wa.me/254701859605"
-        target="_blank"
-        rel="noopener"
-      >
-        +254 701 859 605
-      </a>
-
-      <br><br>
-
-      <span id="frontendVersion">
-        V12.0.1 • Dashboard
-      </span>
-    </div>
-
-  </div>
-
-</section>
-
-
-<!-- =========================================================
-     APPLICATION
-========================================================= -->
-
-<div id="app" class="hidden">
-
-<header>
-
-  <div class="headerInner">
-
-    <div class="brand">
-
-      <div class="brandMain">
-        🔥 MT5 <span>FOREX AI ANALYZER V12</span>
-      </div>
-
-      <div class="brandSub">
-        POWERED BY ELISY ANALYSIS DEVELOPER
-      </div>
-
-    </div>
-
-    <div class="headerRight">
-
-      <div
-        id="serverStatus"
-        class="statusBadge offline"
-      >
-        SERVER OFFLINE
-      </div>
-
-      <div
-        id="mt5Status"
-        class="statusBadge offline"
-      >
-        MT5 OFFLINE
-      </div>
-
-    </div>
-
-  </div>
-
-</header>
-
-
-<main class="container">
-
-  <!-- CONNECTION -->
-
-  <div class="connectionBar">
-
-    <div>
-      <span
-        id="connectionDot"
-        class="connectionDot"
-      ></span>
-
-      <span id="connectionText">
-        Connecting...
-      </span>
-    </div>
-
-    <div id="lastUpdate">
-      Last update: --
-    </div>
-
-  </div>
-
-
-  <div class="grid">
-
-    <!-- =====================================================
-         MARKET CONTROL
-    ====================================================== -->
-
-    <section class="card">
-
-      <div class="cardTitle">
-        <span>📊 MARKET CONTROL</span>
-        <small>LIVE MT5</small>
-      </div>
-
-      <div class="controls">
-
-        <div class="control">
-
-          <label>Symbol</label>
-
-          <select id="symbol">
-
-            <option value="EURUSD">
-              EURUSD
-            </option>
-
-            <option value="GBPUSD">
-              GBPUSD
-            </option>
-
-            <option value="USDJPY">
-              USDJPY
-            </option>
-
-            <option value="XAUUSD">
-              XAUUSD
-            </option>
-
-            <option value="AUDUSD">
-              AUDUSD
-            </option>
-
-            <option value="USDCAD">
-              USDCAD
-            </option>
-
-            <option value="USDCHF">
-              USDCHF
-            </option>
-
-          </select>
-
-        </div>
-
-        <div class="control">
-
-          <label>Timeframe</label>
-
-          <select id="timeframe">
-
-            <option value="M1">M1</option>
-            <option value="M5">M5</option>
-            <option value="M15">M15</option>
-            <option value="M30">M30</option>
-            <option value="H1">H1</option>
-            <option value="H4">H4</option>
-            <option value="D1">D1</option>
-
-          </select>
-
-        </div>
-
-      </div>
-
-      <div class="priceBox" style="margin-top:12px">
-
-        <div>
-
-          <div class="price" id="livePrice">
-            --
-          </div>
-
-          <div
-            id="priceSymbol"
-            style="color:#7d8a9e;font-size:10px"
-          >
-            EURUSD
-          </div>
-
-        </div>
-
-        <div class="priceMeta">
-
-          <strong id="priceBid">
-            Bid: --
-          </strong>
-
-          <strong id="priceAsk">
-            Ask: --
-          </strong>
-
-          <span id="spread">
-            Spread: --
-          </span>
-
-        </div>
-
-      </div>
-
-      <div class="statGrid">
-
-        <div class="stat">
-
-          <label>Tick</label>
-
-          <strong id="tickValue">--</strong>
-
-        </div>
-
-        <div class="stat">
-
-          <label>Data</label>
-
-          <strong id="dataAge">--</strong>
-
-        </div>
-
-        <div class="stat">
-
-          <label>Candles</label>
-
-          <strong id="candleCount">0</strong>
-
-        </div>
-
-      </div>
-
-    </section>
-
-
-    <!-- =====================================================
-         FINAL DECISION
-    ====================================================== -->
-
-    <section class="card wide">
-
-      <div class="cardTitle">
-
-        <span>🎯 FINAL AI DECISION</span>
-
-        <small>
-          ANALYSIS ONLY
-        </small>
-
-      </div>
-
-      <div class="finalDecision">
-
-        <div
-          id="finalAction"
-          class="finalAction WAIT"
-        >
-          WAIT
-        </div>
-
-        <div
-          id="finalConfidence"
-          class="confidence"
-        >
-          0%
-        </div>
-
-        <div
-          id="finalReason"
-          style="
-            color:#8b98aa;
-            font-size:11px;
-            margin-top:7px;
-          "
-        >
-          Waiting for MT5 data...
-        </div>
-
-        <div class="entryGrid">
-
-          <div class="entryItem">
-
-            <label>ENTRY</label>
-
-            <strong id="entryPrice">
-              --
-            </strong>
-
-          </div>
-
-          <div class="entryItem">
-
-            <label>STOP LOSS</label>
-
-            <strong id="stopLoss">
-              --
-            </strong>
-
-          </div>
-
-          <div class="entryItem">
-
-            <label>TAKE PROFIT</label>
-
-            <strong id="takeProfit">
-              --
-            </strong>
-
-          </div>
-
-        </div>
-
-      </div>
-
-    </section>
-
-
-    <!-- =====================================================
-         TECHNICAL ENGINE
-    ====================================================== -->
-
-    <section class="card full">
-
-      <div class="cardTitle">
-
-        <span>⚙️ TECHNICAL ENGINE</span>
-
-        <small>
-          RSI • EMA • ATR • MOMENTUM
-        </small>
-
-      </div>
-
-      <div class="indicatorGrid">
-
-        <div class="indicator">
-          <label>RSI (14)</label>
-          <strong id="rsi">--</strong>
-        </div>
-
-        <div class="indicator">
-          <label>EMA 20</label>
-          <strong id="ema20">--</strong>
-        </div>
-
-        <div class="indicator">
-          <label>EMA 50</label>
-          <strong id="ema50">--</strong>
-        </div>
-
-        <div class="indicator">
-          <label>EMA 200</label>
-          <strong id="ema200">--</strong>
-        </div>
-
-        <div class="indicator">
-          <label>ATR</label>
-          <strong id="atr">--</strong>
-        </div>
-
-        <div class="indicator">
-          <label>Momentum</label>
-          <strong id="momentum">--</strong>
-        </div>
-
-        <div class="indicator">
-          <label>Trend</label>
-          <strong id="trend">--</strong>
-        </div>
-
-        <div class="indicator">
-          <label>Candle Structure</label>
-          <strong id="candleStructure">--</strong>
-        </div>
-
-        <div class="indicator">
-          <label>Support</label>
-          <strong id="support">--</strong>
-        </div>
-
-        <div class="indicator">
-          <label>Resistance</label>
-          <strong id="resistance">--</strong>
-        </div>
-
-        <div class="indicator">
-          <label>Spread</label>
-          <strong id="spreadTechnical">--</strong>
-        </div>
-
-        <div class="indicator">
-          <label>Technical Decision</label>
-          <strong id="technicalDecision">WAIT</strong>
-        </div>
-
-      </div>
-
-    </section>
-
-
-    <!-- =====================================================
-         GRAPH
-    ====================================================== -->
-
-    <section class="card wide">
-
-      <div class="cardTitle">
-
-        <span>📈 GRAPH ENGINE</span>
-
-        <small>
-          REAL MT5 CANDLES
-        </small>
-
-      </div>
-
-      <div class="chartWrap">
-
-        <canvas id="chart"></canvas>
-
-      </div>
-
-      <div class="chartLegend">
-
-        <span>Price</span>
-        <span>EMA20</span>
-        <span>EMA50</span>
-        <span>EMA200</span>
-        <span>Support</span>
-        <span>Resistance</span>
-      </div>
-
-    </section>
-
-
-    <!-- =====================================================
-         NEWS & MACRO
-    ====================================================== -->
-
-    <section class="card">
-
-      <div class="cardTitle">
-
-        <span>📰 NEWS & MACRO</span>
-
-        <small>
-          NFP • CPI • FOMC
-        </small>
-
-      </div>
-
-      <div class="newsTimer">
-
-        <div
-          id="newsCountdown"
-          class="newsCountdown"
-        >
-          --
-        </div>
-
-        <div
-          id="newsMode"
-          class="newsMode"
-        >
-          MONITOR
-        </div>
-
-      </div>
-
-      <div class="newsList" id="newsList">
-
-        <div class="newsItem">
-          <strong>No verified news yet</strong>
-          <br>
-          <span>
-            Waiting for news data from the server.
-          </span>
-        </div>
-
-      </div>
-
-    </section>
-
-
-    <!-- =====================================================
-         SIX AI ANALYSTS
-    ====================================================== -->
-
-    <section class="card wide">
-
-      <div class="cardTitle">
-
-        <span>🤖 SIX AI ANALYSTS</span>
-
-        <small>
-          MULTI-MODEL CONSENSUS
-        </small>
-
-      </div>
-
-      <div class="aiGrid">
-
-        <div
-          class="aiRow"
-          id="ai-openai"
-        >
-          <div>
-            <div class="aiName">
-              OpenAI
-            </div>
-            <div class="aiConfidence">
-              Waiting...
-            </div>
-          </div>
-
-          <div class="aiAction">
-            WAIT
-          </div>
-        </div>
-
-
-        <div
-          class="aiRow"
-          id="ai-deepseek"
-        >
-          <div>
-            <div class="aiName">
-              DeepSeek
-            </div>
-            <div class="aiConfidence">
-              Waiting...
-            </div>
-          </div>
-
-          <div class="aiAction">
-            WAIT
-          </div>
-        </div>
-
-
-        <div
-          class="aiRow"
-          id="ai-gemini"
-        >
-          <div>
-            <div class="aiName">
-              Gemini
-            </div>
-            <div class="aiConfidence">
-              Waiting...
-            </div>
-          </div>
-
-          <div class="aiAction">
-            WAIT
-          </div>
-        </div>
-
-
-        <div
-          class="aiRow"
-          id="ai-groq"
-        >
-          <div>
-            <div class="aiName">
-              Groq
-            </div>
-            <div class="aiConfidence">
-              Waiting...
-            </div>
-          </div>
-
-          <div class="aiAction">
-            WAIT
-          </div>
-        </div>
-
-
-        <div
-          class="aiRow"
-          id="ai-openrouter"
-        >
-          <div>
-            <div class="aiName">
-              OpenRouter
-            </div>
-            <div class="aiConfidence">
-              Waiting...
-            </div>
-          </div>
-
-          <div class="aiAction">
-            WAIT
-          </div>
-        </div>
-
-
-        <div
-          class="aiRow"
-          id="ai-mistral"
-        >
-          <div>
-            <div class="aiName">
-              Mistral AI
-            </div>
-            <div class="aiConfidence">
-              Waiting...
-            </div>
-          </div>
-
-          <div class="aiAction">
-            WAIT
-          </div>
-        </div>
-
-      </div>
-
-      <div
-        id="aiStatus"
-        class="aiStatus"
-      >
-        AI engine waiting for analysis...
-      </div>
-
-    </section>
-
-
-    <!-- =====================================================
-         CONSENSUS
-    ====================================================== -->
-
-    <section class="card full">
-
-      <div class="cardTitle">
-
-        <span>🧠 CONSENSUS ENGINE</span>
-
-        <small>
-          6 AI + TECHNICAL
-        </small>
-
-      </div>
-
-      <div class="consensusBox">
-
-        <div class="consensusItem">
-
-          <strong
-            id="buyPercent"
-            class="good"
-          >
-            0%
-          </strong>
-
-          <span>
-            BUY
-          </span>
-
-        </div>
-
-        <div class="consensusItem">
-
-          <strong
-            id="sellPercent"
-            class="bad"
-          >
-            0%
-          </strong>
-
-          <span>
-            SELL
-          </span>
-
-        </div>
-
-        <div class="consensusItem">
-
-          <strong
-            id="waitPercent"
-            class="warn"
-          >
-            100%
-          </strong>
-
-          <span>
-            WAIT
-          </span>
-
-        </div>
-
-      </div>
-
-      <div class="statGrid">
-
-        <div class="stat">
-
-          <label>AI AGREEMENT</label>
-
-          <strong id="aiAgreement">
-            0%
-          </strong>
-
-        </div>
-
-        <div class="stat">
-
-          <label>TECHNICAL</label>
-
-          <strong id="technicalConfirmation">
-            WAIT
-          </strong>
-
-        </div>
-
-        <div class="stat">
-
-          <label>MARKET REGIME</label>
-
-          <strong id="marketRegime">
-            UNKNOWN
-          </strong>
-
-        </div>
-
-      </div>
-
-    </section>
-
-
-    <!-- =====================================================
-         PRE NEWS AI
-    ====================================================== -->
-
-    <section class="card">
-
-      <div class="cardTitle">
-
-        <span>🔮 PRE-NEWS AI FORECAST</span>
-
-        <small>
-          ≤ 30 MIN
-        </small>
-
-      </div>
-
-      <div
-        id="preNewsForecast"
-        class="newsItem"
-      >
-
-        Waiting for verified upcoming news.
-
-      </div>
-
-    </section>
-
-
-    <!-- =====================================================
-         NEWS VERIFICATION
-    ====================================================== -->
-
-    <section class="card">
-
-      <div class="cardTitle">
-
-        <span>✅ NEWS VERIFICATION</span>
-
-        <small>
-          ACTUAL VS FORECAST
-        </small>
-
-      </div>
-
-      <div
-        id="newsVerification"
-        class="newsItem"
-      >
-
-        No released event available.
-
-      </div>
-
-    </section>
-
-
-    <!-- =====================================================
-         SAFETY ENGINE
-    ====================================================== -->
-
-    <section class="card wide">
-
-      <div class="cardTitle">
-
-        <span>🛡️ SAFETY ENGINE</span>
-
-        <small>
-          RISK CONTROL
-        </small>
-
-      </div>
-
-      <div class="safetyGrid">
-
-        <div class="safety">
-
-          <label>Spread</label>
-
-          <strong id="safetySpread">
-            WAITING
-          </strong>
-
-        </div>
-
-        <div class="safety">
-
-          <label>Daily Loss</label>
-
-          <strong id="dailyLoss">
-            0%
-          </strong>
-
-        </div>
-
-        <div class="safety">
-
-          <label>Max Positions</label>
-
-          <strong id="maxPositions">
-            3
-          </strong>
-
-        </div>
-
-        <div class="safety">
-
-          <label>Cooldown</label>
-
-          <strong id="cooldown">
-            READY
-          </strong>
-
-        </div>
-
-        <div class="safety">
-
-          <label>News Risk</label>
-
-          <strong id="newsRisk">
-            UNKNOWN
-          </strong>
-
-        </div>
-
-        <div class="safety">
-
-          <label>Data Status</label>
-
-          <strong id="staleData">
-            WAITING
-          </strong>
-
-        </div>
-
-      </div>
-
-    </section>
-
-
-    <!-- =====================================================
-         EXECUTION
-    ====================================================== -->
-
-    <section class="card">
-
-      <div class="cardTitle">
-
-        <span>⚡ EXECUTION</span>
-
-        <small>
-          MANUAL / PAPER
-        </small>
-
-      </div>
-
-      <div class="newsItem">
-
-        <strong>
-          AUTO TRADING: DISABLED
-        </strong>
-
-        <br><br>
-
-        <span>
-          This dashboard provides analysis and alerts.
-          It does not automatically place live trades.
-        </span>
-
-      </div>
-
-      <div style="display:flex;gap:8px;margin-top:10px">
-
-        <button
-          id="paperTradeBtn"
-          class="btn green"
-          type="button"
-        >
-          📝 PAPER TRADE
-        </button>
-
-        <button
-          id="clearTradeBtn"
-          class="btn"
-          type="button"
-        >
-          CLEAR
-        </button>
-
-      </div>
-
-    </section>
-
-
-    <!-- =====================================================
-         POSITIONS
-    ====================================================== -->
-
-    <section class="card">
-
-      <div class="cardTitle">
-
-        <span>📌 POSITIONS</span>
-
-        <small>
-          PAPER
-        </small>
-
-      </div>
-
-      <div id="positions">
-
-        <div class="newsItem">
-          No paper positions.
-        </div>
-
-      </div>
-
-    </section>
-
-
-    <!-- =====================================================
-         EVENT LOG
-    ====================================================== -->
-
-    <section class="card full">
-
-      <div class="cardTitle">
-
-        <span>🖥️ EVENT LOG</span>
-
-        <button
-          id="clearLog"
-          class="btn"
-          type="button"
-        >
-          CLEAR
-        </button>
-
-      </div>
-
-      <div
-        id="logBox"
-        class="logBox"
-      ></div>
-
-    </section>
-
-  </div>
-
-
-  <div class="footer">
-
-    MT5 FOREX AI ANALYZER V12
-    • POWERED BY ELISY ANALYSIS DEVELOPER
-    • ANALYSIS ONLY • NOT FINANCIAL ADVICE
-
-    <br><br>
-
-    📱
-    <a
-      href="https://wa.me/254701859605"
-      target="_blank"
-      rel="noopener"
-    >
-      WhatsApp +254 701 859 605
-    </a>
-
-  </div>
-
-</main>
-
-</div>
-
-
 <script>
 "use strict";
 
 /* =========================================================
-   VERSION
+   MT5 FOREX AI ANALYZER V12.0.2
 ========================================================= */
 
-const FRONTEND_VERSION = "12.0.1";
+const FRONTEND_VERSION = "12.0.2";
 
 
 /* =========================================================
@@ -1895,17 +24,6 @@ function safeText(value, fallback="--"){
   return String(value);
 }
 
-function number(value, decimals=5){
-
-  const n = Number(value);
-
-  if(!Number.isFinite(n)){
-    return "--";
-  }
-
-  return n.toFixed(decimals);
-}
-
 function percentage(value){
 
   const n = Number(value);
@@ -1915,6 +33,17 @@ function percentage(value){
   }
 
   return Math.round(n) + "%";
+}
+
+function escapeHTML(value){
+
+  return String(value)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+
 }
 
 
@@ -1948,85 +77,137 @@ const state = {
 
   selectedSymbol:"EURUSD",
 
-  selectedTimeframe:"M1"
+  selectedTimeframe:"M1",
+
+  loadingDashboard:false
 
 };
 
 
 /* =========================================================
-   INITIALIZATION
+   DOM READY
 ========================================================= */
 
 document.addEventListener("DOMContentLoaded",()=>{
 
-  $("frontendVersion").textContent =
-    "V" + FRONTEND_VERSION + " • Dashboard";
-
-  $("symbol").addEventListener("change",()=>{
-
-    state.selectedSymbol =
-      $("symbol").value;
-
-    log(
-      "Symbol changed to " +
-      state.selectedSymbol,
-      "info"
-    );
-
-    requestDashboard();
-
-  });
+  console.log(
+    "🔥 MT5 FOREX AI ANALYZER V" +
+    FRONTEND_VERSION +
+    " STARTING"
+  );
 
 
-  $("timeframe").addEventListener("change",()=>{
+  const version =
+    $("frontendVersion");
 
-    state.selectedTimeframe =
-      $("timeframe").value;
+  if(version){
 
-    log(
-      "Timeframe changed to " +
-      state.selectedTimeframe,
-      "info"
-    );
+    version.textContent =
+      "V" +
+      FRONTEND_VERSION +
+      " • Dashboard";
 
-    requestDashboard();
-
-  });
+  }
 
 
-  $("loginBtn").addEventListener(
+  /* Symbol */
+
+  $("symbol")?.addEventListener(
+    "change",
+    ()=>{
+
+      state.selectedSymbol =
+        $("symbol").value;
+
+      log(
+        "Symbol changed to " +
+        state.selectedSymbol,
+        "info"
+      );
+
+      sendSubscription();
+
+      requestDashboard();
+
+    }
+  );
+
+
+  /* Timeframe */
+
+  $("timeframe")?.addEventListener(
+    "change",
+    ()=>{
+
+      state.selectedTimeframe =
+        $("timeframe").value;
+
+      log(
+        "Timeframe changed to " +
+        state.selectedTimeframe,
+        "info"
+      );
+
+      sendSubscription();
+
+      requestDashboard();
+
+    }
+  );
+
+
+  /* Login */
+
+  $("loginBtn")?.addEventListener(
     "click",
     login
   );
 
 
-  $("password").addEventListener(
+  $("password")?.addEventListener(
     "keydown",
     event=>{
 
       if(event.key === "Enter"){
+
+        event.preventDefault();
+
         login();
+
       }
 
     }
   );
 
 
-  $("clearLog").addEventListener(
+  /* Clear log */
+
+  $("clearLog")?.addEventListener(
     "click",
     ()=>{
+
       $("logBox").innerHTML="";
+
+      log(
+        "Event log cleared.",
+        "info"
+      );
+
     }
   );
 
 
-  $("paperTradeBtn").addEventListener(
+  /* Paper trade */
+
+  $("paperTradeBtn")?.addEventListener(
     "click",
     createPaperTrade
   );
 
 
-  $("clearTradeBtn").addEventListener(
+  /* Clear trades */
+
+  $("clearTradeBtn")?.addEventListener(
     "click",
     ()=>{
 
@@ -2045,7 +226,24 @@ document.addEventListener("DOMContentLoaded",()=>{
 
   window.addEventListener(
     "resize",
-    drawChart
+    ()=>{
+      if(state.loggedIn){
+        drawChart();
+      }
+    }
+  );
+
+
+  log(
+    "Frontend V" +
+    FRONTEND_VERSION +
+    " initialized.",
+    "info"
+  );
+
+  log(
+    "Login required before dashboard connection.",
+    "info"
   );
 
 });
@@ -2058,62 +256,110 @@ document.addEventListener("DOMContentLoaded",()=>{
 async function login(){
 
   if(state.loggedIn){
+
+    openDashboard();
+
     return;
+
   }
 
-  const password =
-    $("password").value.trim();
 
-  $("loginError").textContent="";
+  const passwordElement =
+    $("password");
+
+  const loginButton =
+    $("loginBtn");
+
+  const loginError =
+    $("loginError");
+
+
+  const password =
+    passwordElement.value.trim();
+
+
+  loginError.textContent="";
+
 
   if(!password){
 
-    $("loginError").textContent =
+    loginError.textContent =
       "Enter your bot password.";
 
     return;
+
   }
 
-  const btn=$("loginBtn");
 
-  btn.disabled=true;
-  btn.textContent="🔄 LOGGING IN...";
+  loginButton.disabled=true;
+
+  loginButton.textContent =
+    "🔄 LOGGING IN...";
+
+
+  log(
+    "Sending secure login request...",
+    "info"
+  );
+
 
   try{
 
-    const response=await fetch(
-      "/api/login",
-      {
-        method:"POST",
+    const response =
+      await fetch(
+        "/api/login",
+        {
+          method:"POST",
 
-        headers:{
-          "Content-Type":
-            "application/json"
-        },
+          credentials:"include",
 
-        body:JSON.stringify({
-          password
-        })
-      }
+          headers:{
+            "Content-Type":
+              "application/json",
+
+            "Accept":
+              "application/json"
+          },
+
+          body:JSON.stringify({
+            password:password
+          }),
+
+          cache:"no-store"
+        }
+      );
+
+
+    const raw =
+      await response.text();
+
+
+    console.log(
+      "LOGIN STATUS:",
+      response.status
     );
+
+    console.log(
+      "LOGIN RAW:",
+      raw
+    );
+
 
     let data={};
 
     try{
 
-      data=await response.json();
+      data =
+        JSON.parse(raw);
 
     }catch(error){
 
-      data={};
+      console.error(
+        "Login JSON parse error:",
+        error
+      );
 
     }
-
-    console.log(
-      "LOGIN RESPONSE:",
-      response.status,
-      data
-    );
 
 
     if(
@@ -2121,14 +367,23 @@ async function login(){
       data.success !== true
     ){
 
-      $("loginError").textContent =
+      loginError.textContent =
         data.message ||
-        "Invalid password.";
+        "Login failed.";
 
-      btn.disabled=false;
-      btn.textContent="🔐 LOGIN";
+      log(
+        "Login rejected: HTTP " +
+        response.status,
+        "error"
+      );
+
+      loginButton.disabled=false;
+
+      loginButton.textContent =
+        "🔐 LOGIN";
 
       return;
+
     }
 
 
@@ -2138,50 +393,60 @@ async function login(){
 
     state.loggedIn=true;
 
-    $("password").value="";
-
-    $("loginScreen").style.display="none";
-
-    $("app").classList.remove("hidden");
-
-    $("app").style.display="block";
-
 
     log(
-      "Secure login successful.",
-      "ok"
-    );
-
-    log(
-      "MT5 FOREX AI ANALYZER V12 dashboard loaded.",
+      "✅ Login successful.",
       "ok"
     );
 
 
-    /* ==============================================
-       CONNECT
-    ============================================== */
+    /*
+     * OPEN DASHBOARD IMMEDIATELY.
+     *
+     * Do NOT wait for WebSocket.
+     * Do NOT wait for dashboard API.
+     */
 
-    connect();
-
-
-    /* ==============================================
-       LOAD DASHBOARD
-    ============================================== */
-
-    await loadDashboard();
+    openDashboard();
 
 
-    /* ==============================================
-       DRAW
-    ============================================== */
+    /*
+     * Start backend communication separately.
+     */
 
-    setTimeout(
-      ()=>{
-        drawChart();
-      },
-      300
-    );
+    setTimeout(()=>{
+
+      try{
+
+        connect();
+
+      }catch(error){
+
+        console.error(
+          "Connect error:",
+          error
+        );
+
+        log(
+          "WebSocket startup error: " +
+          error.message,
+          "error"
+        );
+
+      }
+
+    },100);
+
+
+    /*
+     * Load dashboard separately.
+     */
+
+    setTimeout(()=>{
+
+      loadDashboard();
+
+    },150);
 
 
   }catch(error){
@@ -2191,8 +456,10 @@ async function login(){
       error
     );
 
-    $("loginError").textContent =
+
+    loginError.textContent =
       "Server unavailable. Check Render.";
+
 
     log(
       "Login request failed: " +
@@ -2200,10 +467,115 @@ async function login(){
       "error"
     );
 
-    btn.disabled=false;
-    btn.textContent="🔐 LOGIN";
+
+    loginButton.disabled=false;
+
+    loginButton.textContent =
+      "🔐 LOGIN";
 
   }
+
+}
+
+
+/* =========================================================
+   OPEN DASHBOARD
+========================================================= */
+
+function openDashboard(){
+
+  console.log(
+    "🔥 OPENING DASHBOARD"
+  );
+
+
+  const loginScreen =
+    $("loginScreen");
+
+  const app =
+    $("app");
+
+
+  if(!loginScreen){
+
+    console.error(
+      "loginScreen element missing"
+    );
+
+    return;
+
+  }
+
+
+  if(!app){
+
+    console.error(
+      "app element missing"
+    );
+
+    return;
+
+  }
+
+
+  /* Hide login */
+
+  loginScreen.classList.add(
+    "hidden"
+  );
+
+  loginScreen.style.display =
+    "none";
+
+
+  /* Show application */
+
+  app.classList.remove(
+    "hidden"
+  );
+
+  app.style.display =
+    "block";
+
+  app.style.visibility =
+    "visible";
+
+  app.style.opacity =
+    "1";
+
+  app.style.minHeight =
+    "100vh";
+
+
+  document.body.style.overflowX =
+    "hidden";
+
+
+  console.log(
+    "✅ DASHBOARD DOM IS VISIBLE"
+  );
+
+
+  log(
+    "🔥 Dashboard opened.",
+    "ok"
+  );
+
+
+  log(
+    "Waiting for MT5 connection...",
+    "info"
+  );
+
+
+  /*
+   * Draw empty dashboard immediately.
+   */
+
+  setTimeout(
+    drawChart,
+    50
+  );
 
 }
 
@@ -2230,26 +602,31 @@ function websocketUrl(){
 
 
 /* =========================================================
-   WEBSOCKET CONNECT
+   CONNECT
 ========================================================= */
 
 function connect(){
 
   if(!state.loggedIn){
+
     return;
+
   }
+
 
   if(
     state.ws &&
     (
       state.ws.readyState ===
         WebSocket.OPEN ||
+
       state.ws.readyState ===
         WebSocket.CONNECTING
     )
   ){
 
     return;
+
   }
 
 
@@ -2257,12 +634,16 @@ function connect(){
     state.reconnectTimer
   );
 
-  const url=websocketUrl();
+
+  const url =
+    websocketUrl();
+
 
   log(
-    "Connecting WebSocket: " + url,
+    "Connecting WebSocket...",
     "info"
   );
+
 
   setConnection(
     false,
@@ -2277,15 +658,20 @@ function connect(){
 
   }catch(error){
 
+    console.error(
+      "WebSocket create error:",
+      error
+    );
+
     log(
-      "WebSocket creation failed: " +
-      error.message,
+      "WebSocket creation failed.",
       "error"
     );
 
     scheduleReconnect();
 
     return;
+
   }
 
 
@@ -2297,22 +683,20 @@ function connect(){
 
     state.reconnecting=false;
 
+
     setConnection(
       true,
       "Server connected"
     );
 
+
     log(
-      "WebSocket connected.",
+      "✅ WebSocket connected.",
       "ok"
     );
 
 
-    sendWS({
-      type:"subscribe",
-      symbol:state.selectedSymbol,
-      timeframe:state.selectedTimeframe
-    });
+    sendSubscription();
 
   };
 
@@ -2322,15 +706,19 @@ function connect(){
     try{
 
       const message =
-        JSON.parse(event.data);
+        JSON.parse(
+          event.data
+        );
 
-      handleWSMessage(message);
+      handleWSMessage(
+        message
+      );
 
     }catch(error){
 
       console.warn(
         "Invalid WebSocket message:",
-        error
+        event.data
       );
 
     }
@@ -2341,9 +729,16 @@ function connect(){
   state.ws.onerror=error=>{
 
     console.warn(
-      "WebSocket error",
+      "WebSocket error:",
       error
     );
+
+
+    log(
+      "WebSocket error.",
+      "error"
+    );
+
 
     setConnection(
       false,
@@ -2353,23 +748,49 @@ function connect(){
   };
 
 
-  state.ws.onclose=()=>{
+  state.ws.onclose=event=>{
 
     state.serverOnline=false;
+
 
     setConnection(
       false,
       "Server disconnected"
     );
 
+
     log(
-      "WebSocket disconnected.",
+      "WebSocket disconnected (" +
+      event.code +
+      ").",
       "warn"
     );
+
 
     scheduleReconnect();
 
   };
+
+}
+
+
+/* =========================================================
+   SUBSCRIBE
+========================================================= */
+
+function sendSubscription(){
+
+  sendWS({
+
+    type:"subscribe",
+
+    symbol:
+      state.selectedSymbol,
+
+    timeframe:
+      state.selectedTimeframe
+
+  });
 
 }
 
@@ -2381,21 +802,30 @@ function connect(){
 function scheduleReconnect(){
 
   if(!state.loggedIn){
+
     return;
+
   }
+
 
   if(state.reconnecting){
+
     return;
+
   }
 
+
   state.reconnecting=true;
+
 
   clearTimeout(
     state.reconnectTimer
   );
 
+
   const delay =
     state.reconnectDelay;
+
 
   log(
     "Reconnecting in " +
@@ -2465,8 +895,16 @@ function sendWS(payload){
 function handleWSMessage(message){
 
   if(!message){
+
     return;
+
   }
+
+
+  console.log(
+    "WS:",
+    message
+  );
 
 
   if(
@@ -2481,6 +919,7 @@ function handleWSMessage(message){
     );
 
     return;
+
   }
 
 
@@ -2495,6 +934,7 @@ function handleWSMessage(message){
     );
 
     return;
+
   }
 
 
@@ -2506,6 +946,7 @@ function handleWSMessage(message){
     );
 
     return;
+
   }
 
 
@@ -2517,6 +958,7 @@ function handleWSMessage(message){
     );
 
     return;
+
   }
 
 
@@ -2529,7 +971,6 @@ function handleWSMessage(message){
       "info"
     );
 
-    return;
   }
 
 }
@@ -2554,9 +995,18 @@ function setConnection(
     $("connectionText");
 
 
+  if(!dot || !status || !connectionText){
+
+    return;
+
+  }
+
+
   if(online){
 
-    dot.classList.add("online");
+    dot.classList.add(
+      "online"
+    );
 
     status.classList.remove(
       "offline"
@@ -2588,6 +1038,7 @@ function setConnection(
 
   }
 
+
   connectionText.textContent =
     text || (
       online
@@ -2604,20 +1055,74 @@ function setConnection(
 
 async function loadDashboard(){
 
+  if(
+    !state.loggedIn ||
+    state.loadingDashboard
+  ){
+
+    return;
+
+  }
+
+
+  state.loadingDashboard=true;
+
+
   try{
 
     const response =
       await fetch(
         "/api/dashboard",
         {
-          cache:"no-store"
+          method:"GET",
+
+          credentials:"include",
+
+          cache:"no-store",
+
+          headers:{
+            "Accept":
+              "application/json"
+          }
         }
       );
+
+
+    const raw =
+      await response.text();
+
+
+    console.log(
+      "DASHBOARD HTTP:",
+      response.status
+    );
+
+
+    let data={};
+
+    try{
+
+      data =
+        JSON.parse(raw);
+
+    }catch(error){
+
+      console.error(
+        "Dashboard JSON error:",
+        raw
+      );
+
+      throw new Error(
+        "Server returned invalid JSON"
+      );
+
+    }
 
 
     if(!response.ok){
 
       throw new Error(
+        data.message ||
         "Dashboard HTTP " +
         response.status
       );
@@ -2625,25 +1130,41 @@ async function loadDashboard(){
     }
 
 
-    const data =
-      await response.json();
-
-
     updateDashboard(data);
 
+
     log(
-      "Dashboard data loaded.",
+      "✅ Dashboard data loaded.",
       "ok"
     );
 
 
   }catch(error){
 
-    log(
-      "Dashboard load failed: " +
-      error.message,
-      "error"
+    console.error(
+      "Dashboard error:",
+      error
     );
+
+
+    log(
+      "Dashboard API: " +
+      error.message,
+      "warn"
+    );
+
+
+    /*
+     * Dashboard remains visible even
+     * when MT5/backend data isn't ready.
+     */
+
+    $("finalReason").textContent =
+      "Dashboard online. Waiting for MT5 data...";
+
+  }finally{
+
+    state.loadingDashboard=false;
 
   }
 
@@ -2662,6 +1183,7 @@ function requestDashboard(){
     dashboardRequestTimer
   );
 
+
   dashboardRequestTimer =
     setTimeout(
       loadDashboard,
@@ -2678,12 +1200,15 @@ function requestDashboard(){
 function updateDashboard(data){
 
   if(!data){
+
     return;
+
   }
+
 
   state.dashboard=data;
 
-  state.lastDashboardUpdate=
+  state.lastDashboardUpdate =
     Date.now();
 
 
@@ -2754,6 +1279,7 @@ function updateDashboard(data){
 
   drawChart();
 
+
   $("lastUpdate").textContent =
     "Last update: " +
     new Date().toLocaleTimeString();
@@ -2762,13 +1288,15 @@ function updateDashboard(data){
 
 
 /* =========================================================
-   UPDATE MT5
+   MT5
 ========================================================= */
 
 function updateMT5(data){
 
   if(!data){
+
     return;
+
   }
 
 
@@ -2793,6 +1321,7 @@ function updateMT5(data){
       data.last ??
       data.bid;
 
+
     $("livePrice").textContent =
       safeText(price);
 
@@ -2815,31 +1344,31 @@ function updateMT5(data){
     );
 
 
-  const spreadValue =
+  const spread =
     data.spread ??
     data.spreadPoints;
 
 
   $("spread").textContent =
     "Spread: " +
-    safeText(spreadValue);
+    safeText(spread);
 
 
   $("spreadTechnical").textContent =
-    safeText(spreadValue);
+    safeText(spread);
 
 
   $("tickValue").textContent =
     safeText(
-      data.tick ||
-      data.tickValue ||
+      data.tick ??
+      data.tickValue ??
       data.timestamp
     );
 
 
   const candles =
-    data.candles ||
-    data.rates ||
+    data.candles ??
+    data.rates ??
     data.ohlc;
 
 
@@ -2847,6 +1376,7 @@ function updateMT5(data){
 
     state.candles =
       candles.slice(-500);
+
 
     $("candleCount").textContent =
       state.candles.length;
@@ -2864,8 +1394,10 @@ function updateMT5(data){
 
     state.mt5Online=true;
 
+
     $("mt5Status").className =
       "statusBadge online";
+
 
     $("mt5Status").textContent =
       "MT5 ONLINE";
@@ -2894,7 +1426,9 @@ function updateMT5(data){
 function updateTechnical(data){
 
   if(!data){
+
     return;
+
   }
 
 
@@ -2934,15 +1468,11 @@ function updateTechnical(data){
 
 
   $("momentum").textContent =
-    safeText(
-      data.momentum
-    );
+    safeText(data.momentum);
 
 
   $("trend").textContent =
-    safeText(
-      data.trend
-    );
+    safeText(data.trend);
 
 
   $("candleStructure").textContent =
@@ -2953,35 +1483,36 @@ function updateTechnical(data){
 
 
   $("support").textContent =
-    safeText(
-      data.support
-    );
+    safeText(data.support);
 
 
   $("resistance").textContent =
-    safeText(
-      data.resistance
-    );
+    safeText(data.resistance);
+
+
+  const decision =
+    data.decision ??
+    data.action ??
+    "WAIT";
 
 
   $("technicalDecision").textContent =
     safeText(
-      data.decision ??
-      data.action,
+      decision,
       "WAIT"
     );
 
 
   setActionClass(
     $("technicalDecision"),
-    data.decision ??
-    data.action
+    decision
   );
 
 
   colorNumber(
     $("rsi"),
-    data.rsi
+    data.rsi ??
+    data.RSI
   );
 
 }
@@ -2991,36 +1522,36 @@ function updateTechnical(data){
    AI
 ========================================================= */
 
-const AI_IDS = {
+const AI_IDS={
 
-  "openai":"ai-openai",
+  openai:"ai-openai",
 
-  "deepseek":"ai-deepseek",
+  deepseek:"ai-deepseek",
 
-  "gemini":"ai-gemini",
+  gemini:"ai-gemini",
 
-  "groq":"ai-groq",
+  groq:"ai-groq",
 
-  "openrouter":"ai-openrouter",
+  openrouter:"ai-openrouter",
 
-  "mistral":"ai-mistral"
+  mistral:"ai-mistral"
 
 };
 
 
-const AI_NAMES = {
+const AI_NAMES={
 
-  "openai":"OpenAI",
+  openai:"OpenAI",
 
-  "deepseek":"DeepSeek",
+  deepseek:"DeepSeek",
 
-  "gemini":"Gemini",
+  gemini:"Gemini",
 
-  "groq":"Groq",
+  groq:"Groq",
 
-  "openrouter":"OpenRouter",
+  openrouter:"OpenRouter",
 
-  "mistral":"Mistral AI"
+  mistral:"Mistral AI"
 
 };
 
@@ -3028,7 +1559,9 @@ const AI_NAMES = {
 function updateAI(data){
 
   if(!data){
+
     return;
+
   }
 
 
@@ -3039,20 +1572,20 @@ function updateAI(data){
 
     analysts={};
 
-    data.forEach(
-      item=>{
 
-        const key =
-          String(
-            item.provider ||
-            item.name ||
-            ""
-          ).toLowerCase();
+    data.forEach(item=>{
 
-        analysts[key]=item;
+      const key =
+        String(
+          item.provider ||
+          item.name ||
+          ""
+        ).toLowerCase();
 
-      }
-    );
+
+      analysts[key]=item;
+
+    });
 
   }
 
@@ -3063,8 +1596,11 @@ function updateAI(data){
       const row =
         $(AI_IDS[key]);
 
+
       if(!row){
+
         return;
+
       }
 
 
@@ -3110,19 +1646,27 @@ function updateAI(data){
         );
 
 
-      actionElement.textContent =
-        action;
+      if(actionElement){
+
+        actionElement.textContent =
+          action;
 
 
-      confidenceElement.textContent =
-        "Confidence: " +
-        percentage(confidence);
+        setActionClass(
+          actionElement,
+          action
+        );
+
+      }
 
 
-      setActionClass(
-        actionElement,
-        action
-      );
+      if(confidenceElement){
+
+        confidenceElement.textContent =
+          "Confidence: " +
+          percentage(confidence);
+
+      }
 
     });
 
@@ -3141,7 +1685,9 @@ function updateAI(data){
 function updateConsensus(data){
 
   if(!data){
+
     return;
+
   }
 
 
@@ -3200,7 +1746,9 @@ function updateConsensus(data){
 function updateFinalDecision(data){
 
   if(!data){
+
     return;
+
   }
 
 
@@ -3274,7 +1822,9 @@ function updateFinalDecision(data){
 function updateSafety(data){
 
   if(!data){
+
     return;
+
   }
 
 
@@ -3331,7 +1881,9 @@ function updateSafety(data){
 function updateNews(data){
 
   if(!data){
+
     return;
+
   }
 
 
@@ -3342,9 +1894,7 @@ function updateNews(data){
     [];
 
 
-  if(
-    data.countdown !== undefined
-  ){
+  if(data.countdown !== undefined){
 
     $("newsCountdown").textContent =
       formatCountdown(
@@ -3363,14 +1913,12 @@ function updateNews(data){
   }
 
 
-  const mode =
-    data.mode ||
-    data.status ||
-    "MONITOR";
-
-
   $("newsMode").textContent =
-    String(mode).toUpperCase();
+    String(
+      data.mode ||
+      data.status ||
+      "MONITOR"
+    ).toUpperCase();
 
 
   if(Array.isArray(events)){
@@ -3436,8 +1984,12 @@ function renderNewsEvents(events){
 
         return `
           <div class="newsItem">
-            <strong>${escapeHTML(title)}</strong>
+            <strong>
+              ${escapeHTML(title)}
+            </strong>
+
             <br>
+
             <span>
               ${escapeHTML(currency)}
               ${escapeHTML(time)}
@@ -3458,7 +2010,9 @@ function renderNewsEvents(events){
 function updatePreNews(data){
 
   if(!data){
+
     return;
+
   }
 
 
@@ -3486,7 +2040,9 @@ function updatePreNews(data){
 function updateNewsVerification(data){
 
   if(!data){
+
     return;
+
   }
 
 
@@ -3507,7 +2063,7 @@ function updateNewsVerification(data){
 
 
 /* =========================================================
-   MARKET REGIME
+   REGIME
 ========================================================= */
 
 function updateRegime(value){
@@ -3532,7 +2088,9 @@ function setActionClass(
 ){
 
   if(!element){
+
     return;
+
   }
 
 
@@ -3572,7 +2130,7 @@ function setActionClass(
 
 
 /* =========================================================
-   COLOR NUMBER
+   RSI COLOR
 ========================================================= */
 
 function colorNumber(
@@ -3581,11 +2139,15 @@ function colorNumber(
 ){
 
   if(!element){
+
     return;
+
   }
 
 
-  const n=Number(value);
+  const n =
+    Number(value);
+
 
   element.classList.remove(
     "good",
@@ -3595,7 +2157,9 @@ function colorNumber(
 
 
   if(!Number.isFinite(n)){
+
     return;
+
   }
 
 
@@ -3625,8 +2189,11 @@ function drawChart(){
   const canvas =
     $("chart");
 
+
   if(!canvas){
+
     return;
+
   }
 
 
@@ -3637,14 +2204,14 @@ function drawChart(){
   const width =
     Math.max(
       300,
-      rect.width
+      rect.width || 300
     );
 
 
   const height =
     Math.max(
       200,
-      rect.height
+      rect.height || 290
     );
 
 
@@ -3654,14 +2221,22 @@ function drawChart(){
 
 
   canvas.width =
-    width*dpr;
+    width * dpr;
+
 
   canvas.height =
-    height*dpr;
+    height * dpr;
 
 
   const ctx =
     canvas.getContext("2d");
+
+
+  if(!ctx){
+
+    return;
+
+  }
 
 
   ctx.setTransform(
@@ -3682,9 +2257,9 @@ function drawChart(){
   );
 
 
-  /* background */
+  ctx.fillStyle =
+    "#05080d";
 
-  ctx.fillStyle="#05080d";
 
   ctx.fillRect(
     0,
@@ -3694,10 +2269,11 @@ function drawChart(){
   );
 
 
-  /* grid */
+  /* Grid */
 
-  ctx.strokeStyle=
+  ctx.strokeStyle =
     "rgba(100,120,150,.12)";
+
 
   ctx.lineWidth=1;
 
@@ -3711,7 +2287,11 @@ function drawChart(){
     ctx.beginPath();
 
     ctx.moveTo(x,0);
-    ctx.lineTo(x,height);
+
+    ctx.lineTo(
+      x,
+      height
+    );
 
     ctx.stroke();
 
@@ -3727,7 +2307,11 @@ function drawChart(){
     ctx.beginPath();
 
     ctx.moveTo(0,y);
-    ctx.lineTo(width,y);
+
+    ctx.lineTo(
+      width,
+      y
+    );
 
     ctx.stroke();
 
@@ -3743,17 +2327,24 @@ function drawChart(){
     candles.length < 2
   ){
 
-    ctx.fillStyle="#59677b";
+    ctx.fillStyle =
+      "#59677b";
 
-    ctx.font="12px Arial";
 
-    ctx.textAlign="center";
+    ctx.font =
+      "12px Arial";
+
+
+    ctx.textAlign =
+      "center";
+
 
     ctx.fillText(
       "Waiting for real MT5 candles...",
-      width/2,
-      height/2
+      width / 2,
+      height / 2
     );
+
 
     return;
 
@@ -3762,22 +2353,22 @@ function drawChart(){
 
   const points =
     candles
-      .map(c=>{
-
-        return Number(
+      .map(c=>
+        Number(
           c.close ??
           c.Close ??
           c.price
-        );
-
-      })
+        )
+      )
       .filter(
         Number.isFinite
       );
 
 
-  if(points.length<2){
+  if(points.length < 2){
+
     return;
+
   }
 
 
@@ -3794,7 +2385,7 @@ function drawChart(){
 
 
   const range =
-    max-min || 1;
+    max - min || 1;
 
 
   const pad=25;
@@ -3810,29 +2401,40 @@ function drawChart(){
         pad +
         index *
         (
-          (width-pad*2) /
+          (width - pad * 2) /
           Math.max(
-            visible.length-1,
+            visible.length - 1,
             1
           )
         );
 
 
       const y =
-        height-pad -
+        height -
+        pad -
         (
-          (price-min)/range
+          (price - min) /
+          range
         ) *
-        (height-pad*2);
+        (
+          height -
+          pad * 2
+        );
 
 
       if(index===0){
 
-        ctx.moveTo(x,y);
+        ctx.moveTo(
+          x,
+          y
+        );
 
       }else{
 
-        ctx.lineTo(x,y);
+        ctx.lineTo(
+          x,
+          y
+        );
 
       }
 
@@ -3840,37 +2442,46 @@ function drawChart(){
   );
 
 
-  ctx.strokeStyle="#00ff9d";
+  ctx.strokeStyle =
+    "#00ff9d";
+
 
   ctx.lineWidth=2;
 
   ctx.stroke();
 
 
-  /* current price */
-
   const last =
-    visible[visible.length-1];
+    visible[
+      visible.length - 1
+    ];
 
 
   const lastY =
-    height-pad -
+    height -
+    pad -
     (
-      (last-min)/range
+      (last - min) /
+      range
     ) *
-    (height-pad*2);
+    (
+      height -
+      pad * 2
+    );
 
 
-  ctx.fillStyle="#00ff9d";
+  ctx.fillStyle =
+    "#00ff9d";
+
 
   ctx.beginPath();
 
   ctx.arc(
-    width-pad,
+    width - pad,
     lastY,
     4,
     0,
-    Math.PI*2
+    Math.PI * 2
   );
 
   ctx.fill();
@@ -3915,8 +2526,7 @@ function createPaperTrade(){
 
   const position={
 
-    id:
-      Date.now(),
+    id:Date.now(),
 
     symbol:
       state.selectedSymbol,
@@ -4033,13 +2643,18 @@ function log(
   const box =
     $("logBox");
 
+
   if(!box){
+
     return;
+
   }
 
 
   const line =
-    document.createElement("div");
+    document.createElement(
+      "div"
+    );
 
 
   line.className =
@@ -4051,7 +2666,7 @@ function log(
     "[" +
     new Date().toLocaleTimeString() +
     "] " +
-    message;
+    String(message);
 
 
   box.appendChild(line);
@@ -4080,10 +2695,14 @@ function log(
 
 function formatCountdown(value){
 
-  const n=Number(value);
+  const n =
+    Number(value);
+
 
   if(!Number.isFinite(n)){
+
     return "--";
+
   }
 
 
@@ -4096,18 +2715,20 @@ function formatCountdown(value){
 
   const minutes =
     Math.floor(
-      seconds/60
+      seconds / 60
     );
 
 
   const remaining =
-    seconds%60;
+    seconds % 60;
 
 
   return (
-    String(minutes).padStart(2,"0") +
+    String(minutes)
+      .padStart(2,"0") +
     ":" +
-    String(remaining).padStart(2,"0")
+    String(remaining)
+      .padStart(2,"0")
   );
 
 }
@@ -4115,15 +2736,21 @@ function formatCountdown(value){
 
 function formatMinutes(value){
 
-  const n=Number(value);
+  const n =
+    Number(value);
+
 
   if(!Number.isFinite(n)){
+
     return "--";
+
   }
 
 
-  if(n<=0){
+  if(n <= 0){
+
     return "RELEASED";
+
   }
 
 
@@ -4136,23 +2763,7 @@ function formatMinutes(value){
 
 
 /* =========================================================
-   HTML ESCAPE
-========================================================= */
-
-function escapeHTML(value){
-
-  return String(value)
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
-
-}
-
-
-/* =========================================================
-   DATA AGE WATCHDOG
+   DATA WATCHDOG
 ========================================================= */
 
 setInterval(()=>{
@@ -4175,8 +2786,11 @@ setInterval(()=>{
   if(age > 15000){
 
     $("dataAge").textContent =
-      Math.round(age/1000) +
+      Math.round(
+        age / 1000
+      ) +
       "s OLD";
+
 
     $("dataAge").className =
       "bad";
@@ -4185,6 +2799,7 @@ setInterval(()=>{
 
     $("dataAge").textContent =
       "LIVE";
+
 
     $("dataAge").className =
       "good";
@@ -4195,7 +2810,7 @@ setInterval(()=>{
 
 
 /* =========================================================
-   AI REFRESH
+   DASHBOARD REFRESH
 ========================================================= */
 
 setInterval(()=>{
@@ -4213,22 +2828,47 @@ setInterval(()=>{
 
 
 /* =========================================================
-   INITIAL LOG
+   GLOBAL ERROR HANDLER
+   This makes hidden JS crashes visible in Event Log.
 ========================================================= */
 
-log(
-  "Frontend V" +
-  FRONTEND_VERSION +
-  " initialized.",
-  "info"
+window.addEventListener(
+  "error",
+  event=>{
+
+    console.error(
+      "GLOBAL JS ERROR:",
+      event.error
+    );
+
+
+    log(
+      "JavaScript error: " +
+      event.message,
+      "error"
+    );
+
+  }
 );
 
-log(
-  "Login required before dashboard connection.",
-  "info"
+
+window.addEventListener(
+  "unhandledrejection",
+  event=>{
+
+    console.error(
+      "PROMISE ERROR:",
+      event.reason
+    );
+
+
+    log(
+      "Async error: " +
+      String(event.reason),
+      "error"
+    );
+
+  }
 );
 
-</script>
-
-</body>
-  </html>
+  </script>
