@@ -1,0 +1,2957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>MT5 FOREX AI ANALYZER V12</title>
+
+<style>
+*{box-sizing:border-box}
+
+:root{
+  --bg:#05070b;
+  --card:#0c1119;
+  --card2:#101722;
+  --border:#1e2a39;
+  --text:#f3f7ff;
+  --muted:#8491a5;
+  --green:#16e784;
+  --red:#ff4d67;
+  --yellow:#ffd447;
+  --blue:#4da3ff;
+}
+
+body{
+  margin:0;
+  background:
+  radial-gradient(circle at 10% 0%,#12251b 0,transparent 30%),
+  radial-gradient(circle at 90% 0%,#16152b 0,transparent 30%),
+  var(--bg);
+  color:var(--text);
+  font-family:Arial,Helvetica,sans-serif;
+}
+
+button,input,select{font:inherit}
+button{cursor:pointer}
+
+.hidden{display:none!important}
+
+/* LOGIN */
+
+#loginScreen{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+
+.login{
+  width:min(430px,100%);
+  padding:30px;
+  background:rgba(12,17,25,.97);
+  border:1px solid var(--border);
+  border-radius:24px;
+  box-shadow:0 25px 80px #0009;
+}
+
+.logo{
+  width:75px;
+  height:75px;
+  margin:auto;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:20px;
+  background:#101c16;
+  border:1px solid #28563c;
+  font-size:38px;
+}
+
+.login h1{
+  text-align:center;
+  font-size:23px;
+  margin:18px 0 5px;
+}
+
+.login p{
+  text-align:center;
+  color:var(--muted);
+  font-size:11px;
+  letter-spacing:1px;
+}
+
+.input{
+  width:100%;
+  margin-top:18px;
+  padding:14px;
+  border-radius:12px;
+  border:1px solid var(--border);
+  background:#070b10;
+  color:white;
+  outline:none;
+}
+
+.input:focus{
+  border-color:var(--green);
+}
+
+.primary{
+  width:100%;
+  margin-top:12px;
+  padding:14px;
+  border:0;
+  border-radius:12px;
+  background:var(--green);
+  color:#001b0d;
+  font-weight:900;
+}
+
+.error{
+  color:var(--red);
+  text-align:center;
+  font-size:12px;
+  margin-top:10px;
+}
+
+/* HEADER */
+
+header{
+  position:sticky;
+  top:0;
+  z-index:50;
+  background:#05070bea;
+  backdrop-filter:blur(15px);
+  border-bottom:1px solid var(--border);
+}
+
+.header{
+  max-width:1500px;
+  margin:auto;
+  padding:13px 18px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:11px;
+}
+
+.brand-icon{
+  width:44px;
+  height:44px;
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#101c16;
+  border:1px solid #28563c;
+  font-size:22px;
+}
+
+.brand h1{
+  margin:0;
+  font-size:16px;
+}
+
+.brand small{
+  color:var(--muted);
+  font-size:9px;
+}
+
+.header-right{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.status{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  border:1px solid var(--border);
+  padding:8px 11px;
+  border-radius:20px;
+  font-size:10px;
+  color:var(--muted);
+}
+
+.dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:var(--red);
+}
+
+.dot.online{
+  background:var(--green);
+  box-shadow:0 0 10px var(--green);
+}
+
+.logout{
+  border:1px solid var(--border);
+  background:#111823;
+  color:white;
+  padding:8px 11px;
+  border-radius:9px;
+}
+
+/* MAIN */
+
+.container{
+  max-width:1500px;
+  margin:auto;
+  padding:17px;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(12,1fr);
+  gap:13px;
+}
+
+.card{
+  background:linear-gradient(180deg,#0f1620,#090e15);
+  border:1px solid var(--border);
+  border-radius:17px;
+  padding:15px;
+  min-width:0;
+}
+
+.s12{grid-column:span 12}
+.s8{grid-column:span 8}
+.s7{grid-column:span 7}
+.s6{grid-column:span 6}
+.s5{grid-column:span 5}
+.s4{grid-column:span 4}
+
+.title{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:13px;
+}
+
+.title h2{
+  margin:0;
+  font-size:13px;
+}
+
+.title span{
+  color:var(--muted);
+  font-size:9px;
+}
+
+/* CONTROLS */
+
+.controls{
+  display:grid;
+  grid-template-columns:1.5fr 1fr 1fr auto auto;
+  gap:9px;
+}
+
+.control{
+  padding:11px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:#070b11;
+  color:white;
+  outline:none;
+}
+
+.btn{
+  padding:10px 14px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:#111923;
+  color:white;
+  font-weight:800;
+}
+
+.green{
+  color:var(--green);
+  border-color:#265b3e;
+  background:#0d291c;
+}
+
+.red{
+  color:#ff7082;
+  border-color:#632533;
+  background:#2b1218;
+}
+
+/* MARKET */
+
+.price{
+  font-size:35px;
+  font-weight:900;
+  margin:5px 0;
+}
+
+.price-up{color:var(--green)}
+.price-down{color:var(--red)}
+
+.metrics{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:8px;
+}
+
+.metric{
+  background:#080d14;
+  border:1px solid #18222f;
+  border-radius:10px;
+  padding:10px;
+}
+
+.metric small{
+  color:var(--muted);
+  display:block;
+  font-size:9px;
+}
+
+.metric strong{
+  display:block;
+  margin-top:5px;
+  font-size:13px;
+}
+
+/* CHART */
+
+.chart{
+  height:370px;
+  position:relative;
+  border-radius:12px;
+  overflow:hidden;
+  background:#05090e;
+  border:1px solid #18222f;
+}
+
+canvas{
+  width:100%;
+  height:100%;
+}
+
+.legend{
+  position:absolute;
+  top:10px;
+  left:10px;
+  display:flex;
+  gap:5px;
+  z-index:2;
+}
+
+.legend span{
+  padding:5px 7px;
+  border-radius:6px;
+  border:1px solid #1b2735;
+  background:#05090ed9;
+  color:var(--muted);
+  font-size:8px;
+}
+
+/* TECH */
+
+.techgrid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+}
+
+.tech{
+  background:#080d14;
+  border:1px solid #18222f;
+  border-radius:10px;
+  padding:9px;
+}
+
+.tech small{
+  color:var(--muted);
+  font-size:8px;
+}
+
+.tech strong{
+  display:block;
+  margin-top:5px;
+  font-size:13px;
+}
+
+/* NEWS */
+
+.news{
+  display:flex;
+  align-items:center;
+  gap:13px;
+}
+
+.news-icon{
+  width:52px;
+  height:52px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  border-radius:14px;
+  background:#1b1609;
+  border:1px solid #4d3d13;
+  font-size:23px;
+}
+
+.news-name{
+  font-weight:900;
+  font-size:15px;
+}
+
+.news-time{
+  color:var(--muted);
+  font-size:10px;
+  margin-top:4px;
+}
+
+.countdown{
+  font-size:28px;
+  font-weight:900;
+  margin-top:15px;
+}
+
+.news-mode{
+  display:inline-block;
+  margin-top:9px;
+  padding:6px 10px;
+  border-radius:20px;
+  color:var(--yellow);
+  background:#1a1508;
+  border:1px solid #493a13;
+  font-size:9px;
+  font-weight:900;
+}
+
+/* AI */
+
+.ai{
+  display:grid;
+  gap:7px;
+}
+
+.airow{
+  display:grid;
+  grid-template-columns:1.4fr .6fr .5fr;
+  align-items:center;
+  padding:9px;
+  background:#080d14;
+  border:1px solid #18222f;
+  border-radius:9px;
+  font-size:11px;
+}
+
+.aivote{
+  font-weight:900;
+}
+
+.aiconf{
+  color:var(--muted);
+  text-align:right;
+}
+
+/* CONSENSUS */
+
+.consensus{
+  text-align:center;
+}
+
+.signal{
+  font-size:39px;
+  font-weight:1000;
+  margin:7px;
+}
+
+.buy{color:var(--green)}
+.sell{color:var(--red)}
+.wait{color:var(--yellow)}
+
+.bars{
+  display:grid;
+  gap:9px;
+  margin-top:14px;
+}
+
+.barrow{
+  display:grid;
+  grid-template-columns:45px 1fr 42px;
+  align-items:center;
+  gap:7px;
+  font-size:9px;
+}
+
+.bar{
+  height:8px;
+  border-radius:10px;
+  background:#17202a;
+  overflow:hidden;
+}
+
+.bar i{
+  display:block;
+  height:100%;
+  width:0;
+}
+
+/* DECISION */
+
+.decision{
+  border-color:#28523a;
+}
+
+.final{
+  text-align:center;
+  font-size:46px;
+  font-weight:1000;
+  margin:5px 0 17px;
+}
+
+.decisiongrid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:8px;
+}
+
+.decisionitem{
+  background:#080d14;
+  border:1px solid #18222f;
+  padding:10px;
+  border-radius:9px;
+}
+
+.decisionitem small{
+  color:var(--muted);
+  font-size:8px;
+}
+
+.decisionitem strong{
+  display:block;
+  margin-top:5px;
+  font-size:14px;
+}
+
+/* SAFETY */
+
+.safety{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:7px;
+}
+
+.safe{
+  display:flex;
+  justify-content:space-between;
+  padding:9px;
+  border-radius:9px;
+  background:#080d14;
+  border:1px solid #18222f;
+  font-size:9px;
+}
+
+.pass{color:var(--green)}
+.fail{color:var(--red)}
+
+/* TABLE */
+
+.tablewrap{
+  overflow:auto;
+}
+
+table{
+  width:100%;
+  min-width:650px;
+  border-collapse:collapse;
+}
+
+th,td{
+  text-align:left;
+  padding:9px;
+  border-bottom:1px solid #18222f;
+  font-size:9px;
+}
+
+th{
+  color:var(--muted);
+}
+
+/* LOG */
+
+.log{
+  height:180px;
+  overflow:auto;
+  padding:10px;
+  background:#05090e;
+  border:1px solid #18222f;
+  border-radius:10px;
+  font-family:monospace;
+  font-size:9px;
+}
+
+.logline{
+  margin-bottom:7px;
+}
+
+.logtime{color:#657386}
+.logok{color:var(--green)}
+.logwarn{color:var(--yellow)}
+.logerr{color:var(--red)}
+.loginfo{color:var(--blue)}
+
+/* SUPPORT */
+
+.support{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+}
+
+.whatsapp{
+  display:inline-block;
+  text-decoration:none;
+  color:var(--green);
+  background:#12301f;
+  border:1px solid #285e3e;
+  padding:10px 13px;
+  border-radius:10px;
+  font-weight:900;
+  font-size:11px;
+}
+
+/* MOBILE */
+
+@media(max-width:1000px){
+
+  .s8,.s7,.s6,.s5,.s4{
+    grid-column:span 12;
+  }
+
+  .controls{
+    grid-template-columns:1fr 1fr;
+  }
+}
+
+@media(max-width:600px){
+
+  .container{padding:9px}
+
+  .header{padding:10px}
+
+  .brand h1{font-size:12px}
+
+  .status{display:none}
+
+  .controls{
+    grid-template-columns:1fr;
+  }
+
+  .metrics{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+  .techgrid{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+  .decisiongrid{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+  .safety{
+    grid-template-columns:1fr;
+  }
+
+  .chart{
+    height:300px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<!-- =====================================================
+     LOGIN
+===================================================== -->
+
+<section id="loginScreen">
+
+  <div class="login">
+
+    <div class="logo">🔥</div>
+
+    <h1>MT5 FOREX AI ANALYZER V12</h1>
+
+    <p>POWERED BY ELISY ANALYSIS DEVELOPER</p>
+
+    <input
+      id="password"
+      class="input"
+      type="password"
+      placeholder="BOT PASSWORD"
+    >
+
+    <button id="loginBtn" class="primary">
+      🔐 LOGIN
+    </button>
+
+    <div id="loginError" class="error"></div>
+
+    <p>📱 +254 701 859 605</p>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     APPLICATION
+===================================================== -->
+
+<div id="app" class="hidden">
+
+<header>
+
+  <div class="header">
+
+    <div class="brand">
+
+      <div class="brand-icon">🔥</div>
+
+      <div>
+        <h1>MT5 FOREX AI ANALYZER V12</h1>
+        <small>POWERED BY ELISY ANALYSIS DEVELOPER</small>
+      </div>
+
+    </div>
+
+    <div class="header-right">
+
+      <div class="status">
+
+        <i id="connectionDot" class="dot"></i>
+
+        <span id="connectionText">
+          DISCONNECTED
+        </span>
+
+      </div>
+
+      <button id="logoutBtn" class="logout">
+        LOGOUT
+      </button>
+
+    </div>
+
+  </div>
+
+</header>
+
+
+<main class="container">
+
+<div class="grid">
+
+
+<!-- =====================================================
+     MARKET CONTROL
+===================================================== -->
+
+<section class="card s12">
+
+  <div class="title">
+
+    <h2>⚙️ MARKET CONTROL</h2>
+
+    <span id="serverStatus">
+      SERVER OFFLINE
+    </span>
+
+  </div>
+
+  <div class="controls">
+
+    <select id="symbol" class="control">
+
+      <option>EURUSD</option>
+      <option>GBPUSD</option>
+      <option>USDJPY</option>
+      <option>USDCHF</option>
+      <option>AUDUSD</option>
+      <option>USDCAD</option>
+      <option>NZDUSD</option>
+      <option>XAUUSD</option>
+      <option>EURJPY</option>
+      <option>GBPJPY</option>
+
+    </select>
+
+    <select id="timeframe" class="control">
+
+      <option>M1</option>
+      <option selected>M5</option>
+      <option>M15</option>
+      <option>M30</option>
+      <option>H1</option>
+      <option>H4</option>
+      <option>D1</option>
+
+    </select>
+
+    <select id="mode" class="control">
+
+      <option value="analysis">
+        ANALYSIS ONLY
+      </option>
+
+      <option value="paper">
+        PAPER TRADING
+      </option>
+
+      <option value="live">
+        LIVE EXECUTION
+      </option>
+
+    </select>
+
+    <button id="scanBtn" class="btn green">
+      🔎 SCAN
+    </button>
+
+    <button id="stopBtn" class="btn red">
+      ■ STOP
+    </button>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     LIVE MARKET
+===================================================== -->
+
+<section class="card s7">
+
+  <div class="title">
+    <h2>📡 REAL MT5 DATA</h2>
+    <span id="lastUpdate">WAITING</span>
+  </div>
+
+  <div id="price" class="price">
+    0.00000
+  </div>
+
+  <div id="change" class="price-up">
+    WAITING FOR MT5 DATA
+  </div>
+
+  <br>
+
+  <div class="metrics">
+
+    <div class="metric">
+      <small>BID</small>
+      <strong id="bid">—</strong>
+    </div>
+
+    <div class="metric">
+      <small>ASK</small>
+      <strong id="ask">—</strong>
+    </div>
+
+    <div class="metric">
+      <small>SPREAD</small>
+      <strong id="spread">—</strong>
+    </div>
+
+    <div class="metric">
+      <small>TICK TIME</small>
+      <strong id="tickTime">—</strong>
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     NEWS
+===================================================== -->
+
+<section class="card s5">
+
+  <div class="title">
+    <h2>📰 NEWS & MACRO ENGINE</h2>
+    <span>REAL CALENDAR</span>
+  </div>
+
+  <div class="news">
+
+    <div class="news-icon">📰</div>
+
+    <div>
+
+      <div id="newsName" class="news-name">
+        No major event
+      </div>
+
+      <div id="newsTime" class="news-time">
+        Calendar waiting...
+      </div>
+
+    </div>
+
+  </div>
+
+  <div id="countdown" class="countdown">
+    --:--
+  </div>
+
+  <div id="newsMode" class="news-mode">
+    🟢 MONITOR MODE
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     GRAPH
+===================================================== -->
+
+<section class="card s8">
+
+  <div class="title">
+    <h2>📈 GRAPH ENGINE</h2>
+    <span>REAL MT5 CANDLES</span>
+  </div>
+
+  <div class="chart">
+
+    <div class="legend">
+
+      <span>PRICE</span>
+      <span>EMA20</span>
+      <span>EMA50</span>
+      <span>EMA200</span>
+
+    </div>
+
+    <canvas id="chart"></canvas>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     TECHNICAL ENGINE
+===================================================== -->
+
+<section class="card s4">
+
+  <div class="title">
+    <h2>📊 TECHNICAL ENGINE</h2>
+    <span>LIVE</span>
+  </div>
+
+  <div class="techgrid">
+
+    <div class="tech">
+      <small>RSI(14)</small>
+      <strong id="rsi">—</strong>
+    </div>
+
+    <div class="tech">
+      <small>EMA20</small>
+      <strong id="ema20">—</strong>
+    </div>
+
+    <div class="tech">
+      <small>EMA50</small>
+      <strong id="ema50">—</strong>
+    </div>
+
+    <div class="tech">
+      <small>EMA200</small>
+      <strong id="ema200">—</strong>
+    </div>
+
+    <div class="tech">
+      <small>ATR</small>
+      <strong id="atr">—</strong>
+    </div>
+
+    <div class="tech">
+      <small>MOMENTUM</small>
+      <strong id="momentum">—</strong>
+    </div>
+
+    <div class="tech">
+      <small>TREND</small>
+      <strong id="trend">—</strong>
+    </div>
+
+    <div class="tech">
+      <small>SUPPORT</small>
+      <strong id="support">—</strong>
+    </div>
+
+    <div class="tech">
+      <small>RESISTANCE</small>
+      <strong id="resistance">—</strong>
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     5 AI ANALYSTS
+===================================================== -->
+
+<section class="card s6">
+
+  <div class="title">
+
+    <h2>🤖 5 AI ANALYST ENGINE</h2>
+
+    <span>SAME MARKET DATA</span>
+
+  </div>
+
+  <div id="aiList" class="ai">
+
+    <div class="airow">
+      <strong>ChatGPT / OpenAI</strong>
+      <span class="aivote wait">WAIT</span>
+      <span class="aiconf">—</span>
+    </div>
+
+    <div class="airow">
+      <strong>Gemini</strong>
+      <span class="aivote wait">WAIT</span>
+      <span class="aiconf">—</span>
+    </div>
+
+    <div class="airow">
+      <strong>Claude</strong>
+      <span class="aivote wait">WAIT</span>
+      <span class="aiconf">—</span>
+    </div>
+
+    <div class="airow">
+      <strong>DeepSeek</strong>
+      <span class="aivote wait">WAIT</span>
+      <span class="aiconf">—</span>
+    </div>
+
+    <div class="airow">
+      <strong>Grok / xAI</strong>
+      <span class="aivote wait">WAIT</span>
+      <span class="aiconf">—</span>
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     CONSENSUS
+===================================================== -->
+
+<section class="card s6">
+
+  <div class="title">
+
+    <h2>🧠 CONSENSUS ENGINE</h2>
+
+    <span>AI AGREEMENT</span>
+
+  </div>
+
+  <div class="consensus">
+
+    <div id="consensus" class="signal wait">
+      WAIT
+    </div>
+
+    <div>
+      AI AGREEMENT:
+      <strong id="agreement">0%</strong>
+    </div>
+
+    <div class="bars">
+
+      <div class="barrow">
+
+        <span>BUY</span>
+
+        <div class="bar">
+          <i id="buyBar" class="buy"></i>
+        </div>
+
+        <strong id="buyPct">0%</strong>
+
+      </div>
+
+      <div class="barrow">
+
+        <span>SELL</span>
+
+        <div class="bar">
+          <i id="sellBar" class="sell"></i>
+        </div>
+
+        <strong id="sellPct">0%</strong>
+
+      </div>
+
+      <div class="barrow">
+
+        <span>WAIT</span>
+
+        <div class="bar">
+          <i id="waitBar" class="wait"></i>
+        </div>
+
+        <strong id="waitPct">0%</strong>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     PRE NEWS AI
+===================================================== -->
+
+<section class="card s6">
+
+  <div class="title">
+
+    <h2>🤖 PRE-NEWS AI FORECAST</h2>
+
+    <span>FORECAST ONLY</span>
+
+  </div>
+
+  <div id="forecastDirection"
+       class="signal wait">
+    WAIT
+  </div>
+
+  <div>
+    CONFIDENCE:
+    <strong id="forecastConfidence">0%</strong>
+  </div>
+
+  <p style="color:#8491a5;font-size:10px;line-height:1.5">
+    Forecast mode analyzes available information before the
+    economic release. Actual data remains pending until released.
+  </p>
+
+</section>
+
+
+<!-- =====================================================
+     NEWS VERIFICATION
+===================================================== -->
+
+<section class="card s6">
+
+  <div class="title">
+
+    <h2>🔎 NEWS VERIFICATION</h2>
+
+    <span>ACTUAL VS FORECAST</span>
+
+  </div>
+
+  <div class="techgrid">
+
+    <div class="tech">
+      <small>FORECAST</small>
+      <strong id="forecastActual">—</strong>
+    </div>
+
+    <div class="tech">
+      <small>ACTUAL</small>
+      <strong id="actual">PENDING</strong>
+    </div>
+
+    <div class="tech">
+      <small>SURPRISE</small>
+      <strong id="surprise">—</strong>
+    </div>
+
+    <div class="tech">
+      <small>USD IMPACT</small>
+      <strong id="usdImpact">—</strong>
+    </div>
+
+    <div class="tech">
+      <small>VOLATILITY</small>
+      <strong id="volatility">—</strong>
+    </div>
+
+    <div class="tech">
+      <small>STATUS</small>
+      <strong id="verification">PENDING</strong>
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     FINAL DECISION
+===================================================== -->
+
+<section class="card decision s7">
+
+  <div class="title">
+
+    <h2>🚨 FINAL DECISION</h2>
+
+    <span id="decisionStatus">
+      WAITING
+    </span>
+
+  </div>
+
+  <div id="finalSignal"
+       class="final wait">
+    WAIT
+  </div>
+
+  <div class="decisiongrid">
+
+    <div class="decisionitem">
+      <small>CONFIDENCE</small>
+      <strong id="confidence">0%</strong>
+    </div>
+
+    <div class="decisionitem">
+      <small>AGREEMENT</small>
+      <strong id="finalAgreement">0%</strong>
+    </div>
+
+    <div class="decisionitem">
+      <small>ENTRY</small>
+      <strong id="entry">—</strong>
+    </div>
+
+    <div class="decisionitem">
+      <small>RISK / REWARD</small>
+      <strong id="rr">—</strong>
+    </div>
+
+    <div class="decisionitem">
+      <small>STOP LOSS</small>
+      <strong id="sl">—</strong>
+    </div>
+
+    <div class="decisionitem">
+      <small>TAKE PROFIT</small>
+      <strong id="tp">—</strong>
+    </div>
+
+    <div class="decisionitem">
+      <small>SYMBOL</small>
+      <strong id="decisionSymbol">EURUSD</strong>
+    </div>
+
+    <div class="decisionitem">
+      <small>TIMEFRAME</small>
+      <strong id="decisionTF">M5</strong>
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     SAFETY
+===================================================== -->
+
+<section class="card s5">
+
+  <div class="title">
+
+    <h2>🛡️ SAFETY ENGINE</h2>
+
+    <span id="safetyOverall">
+      CHECKING
+    </span>
+
+  </div>
+
+  <div class="safety">
+
+    <div class="safe">
+      <span>Spread</span>
+      <strong id="safeSpread" class="pass">✓ PASS</strong>
+    </div>
+
+    <div class="safe">
+      <span>Risk %</span>
+      <strong id="safeRisk" class="pass">✓ PASS</strong>
+    </div>
+
+    <div class="safe">
+      <span>Daily Loss</span>
+      <strong id="safeLoss" class="pass">✓ PASS</strong>
+    </div>
+
+    <div class="safe">
+      <span>Max Positions</span>
+      <strong id="safePositions" class="pass">✓ PASS</strong>
+    </div>
+
+    <div class="safe">
+      <span>Duplicate</span>
+      <strong id="safeDuplicate" class="pass">✓ PASS</strong>
+    </div>
+
+    <div class="safe">
+      <span>Cooldown</span>
+      <strong id="safeCooldown" class="pass">✓ PASS</strong>
+    </div>
+
+    <div class="safe">
+      <span>News Risk</span>
+      <strong id="safeNews" class="pass">✓ PASS</strong>
+    </div>
+
+    <div class="safe">
+      <span>Stale Data</span>
+      <strong id="safeStale" class="pass">✓ PASS</strong>
+    </div>
+
+    <div class="safe">
+      <span>SL / TP</span>
+      <strong id="safeSLTP" class="pass">✓ PASS</strong>
+    </div>
+
+    <div class="safe">
+      <span>Trailing Stop</span>
+      <strong id="safeTrailing" class="pass">✓ READY</strong>
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     EXECUTION
+===================================================== -->
+
+<section class="card s12">
+
+  <div class="title">
+
+    <h2>⚡ MT5 EXECUTION CONTROL</h2>
+
+    <span id="executionMode">
+      ANALYSIS ONLY
+    </span>
+
+  </div>
+
+  <div style="
+    background:#080d14;
+    border:1px solid #18222f;
+    padding:13px;
+    border-radius:11px;
+  ">
+
+    <p style="
+      color:#ffd447;
+      font-size:10px;
+      line-height:1.5;
+      margin-top:0;
+    ">
+      ⚠️ Live execution can place real trades and cause financial loss.
+      Keep ANALYSIS ONLY enabled unless you deliberately configure
+      MT5 execution.
+    </p>
+
+    <button id="alertBtn" class="btn green">
+      🔔 SEND ALERT
+    </button>
+
+    <button id="paperBtn" class="btn">
+      🧪 PAPER TRADE
+    </button>
+
+    <button id="executeBtn" class="btn red">
+      ⚡ EXECUTE MT5
+    </button>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     POSITIONS
+===================================================== -->
+
+<section class="card s12">
+
+  <div class="title">
+
+    <h2>💹 MT5 POSITIONS</h2>
+
+    <span id="positionCount">
+      0 POSITIONS
+    </span>
+
+  </div>
+
+  <div class="tablewrap">
+
+    <table>
+
+      <thead>
+
+        <tr>
+          <th>Ticket</th>
+          <th>Symbol</th>
+          <th>Type</th>
+          <th>Lots</th>
+          <th>Open</th>
+          <th>SL</th>
+          <th>TP</th>
+          <th>Profit</th>
+          <th>Status</th>
+        </tr>
+
+      </thead>
+
+      <tbody id="positions">
+
+        <tr>
+          <td colspan="9"
+              style="text-align:center;color:#657386">
+            No MT5 positions received
+          </td>
+        </tr>
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     EVENT LOG
+===================================================== -->
+
+<section class="card s8">
+
+  <div class="title">
+
+    <h2>📝 EVENT LOG</h2>
+
+    <button id="clearLog" class="btn">
+      CLEAR
+    </button>
+
+  </div>
+
+  <div id="log" class="log"></div>
+
+</section>
+
+
+<!-- =====================================================
+     SUPPORT
+===================================================== -->
+
+<section class="card s4">
+
+  <div class="title">
+    <h2>📱 ELISY SUPPORT</h2>
+  </div>
+
+  <div class="support">
+
+    <div>
+      <strong>MT5 Forex AI Analyzer V12</strong>
+
+      <div style="
+        color:#8491a5;
+        font-size:9px;
+        margin-top:5px;
+      ">
+        Need assistance?
+      </div>
+
+    </div>
+
+    <a
+      class="whatsapp"
+      href="https://wa.me/254701859605"
+      target="_blank"
+      rel="noopener"
+    >
+      💬 WhatsApp
+    </a>
+
+  </div>
+
+</section>
+
+
+</div>
+</main>
+</div>
+
+
+<script>
+
+/* =====================================================
+   STATE
+===================================================== */
+
+const state={
+  loggedIn:false,
+  socket:null,
+  symbol:"EURUSD",
+  timeframe:"M5",
+  mode:"analysis",
+  connected:false,
+  candles:[],
+  analysis:null,
+  lastPrice:0
+};
+
+
+/* =====================================================
+   HELPERS
+===================================================== */
+
+const $=id=>document.getElementById(id);
+
+function num(v,d=5){
+
+  const n=Number(v);
+
+  return Number.isFinite(n)
+    ? n.toFixed(d)
+    : "—";
+}
+
+function percent(v){
+
+  const n=Number(v);
+
+  return Number.isFinite(n)
+    ? Math.round(n)+"%"
+    : "0%";
+}
+
+function log(message,type="info"){
+
+  const box=$("log");
+
+  const div=document.createElement("div");
+
+  div.className="logline";
+
+  const cls=
+    type==="ok"
+      ? "logok"
+      : type==="warn"
+        ? "logwarn"
+        : type==="error"
+          ? "logerr"
+          : "loginfo";
+
+  div.innerHTML=
+    `<span class="logtime">[${new Date().toLocaleTimeString()}]</span>
+     <span class="${cls}">${escapeHtml(message)}</span>`;
+
+  box.appendChild(div);
+
+  box.scrollTop=box.scrollHeight;
+}
+
+function escapeHtml(value){
+
+  return String(value??"")
+    .replace(/[&<>"']/g,char=>({
+      "&":"&amp;",
+      "<":"&lt;",
+      ">":"&gt;",
+      '"':"&quot;",
+      "'":"&#039;"
+    }[char]));
+
+}
+
+
+/* =====================================================
+   LOGIN
+===================================================== */
+
+$("loginBtn").onclick=login;
+
+$("password").onkeydown=e=>{
+
+  if(e.key==="Enter") login();
+
+};
+
+async function login(){
+
+  const password=$("password").value.trim();
+
+  if(!password){
+
+    $("loginError").textContent=
+      "Enter your bot password.";
+
+    return;
+  }
+
+  try{
+
+    const response=await fetch("/api/login",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({password})
+    });
+
+    const data=await response.json();
+
+    if(!response.ok || !data.success){
+
+      $("loginError").textContent=
+        data.message||"Invalid password.";
+
+      return;
+    }
+
+    state.loggedIn=true;
+
+    $("loginScreen").classList.add("hidden");
+
+    $("app").classList.remove("hidden");
+
+    log("Secure login successful.","ok");
+
+    connect();
+
+    loadDashboard();
+
+  }catch(error){
+
+    $("loginError").textContent=
+      "Server unavailable.";
+
+    log("Login request failed.","error");
+
+  }
+
+}
+
+
+/* =====================================================
+   LOGOUT
+===================================================== */
+
+$("logoutBtn").onclick=()=>{
+
+  state.loggedIn=false;
+
+  if(state.socket){
+
+    state.socket.close();
+
+  }
+
+  $("app").classList.add("hidden");
+
+  $("loginScreen").classList.remove("hidden");
+
+  $("password").value="";
+
+};
+
+
+/* =====================================================
+   CONNECTION
+===================================================== */
+
+function setConnection(value){
+
+  state.connected=value;
+
+  $("connectionDot")
+    .classList.toggle("online",value);
+
+  $("connectionText").textContent=
+    value
+      ? "MT5 CONNECTED"
+      : "DISCONNECTED";
+
+  $("serverStatus").textContent=
+    value
+      ? "SERVER ONLINE"
+      : "SERVER OFFLINE";
+
+}
+
+
+/* =====================================================
+   WEBSOCKET
+===================================================== */
+
+function connect(){
+
+  if(state.socket){
+
+    try{
+      state.socket.close();
+    }catch(e){}
+
+  }
+
+  const protocol=
+    location.protocol==="https:"
+      ? "wss"
+      : "ws";
+
+  state.socket=
+    new WebSocket(
+      protocol+
+      "://"+
+      location.host+
+      "/ws"
+    );
+
+  state.socket.onopen=()=>{
+
+    setConnection(true);
+
+    log("WebSocket connected.","ok");
+
+    send({
+      type:"subscribe",
+      symbol:state.symbol,
+      timeframe:state.timeframe
+    });
+
+  };
+
+  state.socket.onmessage=e=>{
+
+    try{
+
+      const message=JSON.parse(e.data);
+
+      handle(message);
+
+    }catch(error){
+
+      log("Invalid server message.","error");
+
+    }
+
+  };
+
+  state.socket.onerror=()=>{
+
+    setConnection(false);
+
+  };
+
+  state.socket.onclose=()=>{
+
+    setConnection(false);
+
+    if(state.loggedIn){
+
+      log(
+        "Connection lost. Reconnecting...",
+        "warn"
+      );
+
+      setTimeout(connect,3000);
+
+    }
+
+  };
+
+}
+
+
+function send(data){
+
+  if(
+    state.socket &&
+    state.socket.readyState===
+      WebSocket.OPEN
+  ){
+
+    state.socket.send(
+      JSON.stringify(data)
+    );
+
+  }
+
+}
+
+
+/* =====================================================
+   SERVER MESSAGE ROUTER
+===================================================== */
+
+function handle(message){
+
+  switch(message.type){
+
+    case "connected":
+
+      setConnection(true);
+
+      break;
+
+    case "tick":
+
+      updateTick(
+        message.data||message
+      );
+
+      break;
+
+    case "candles":
+
+      updateCandles(
+        message.data||[]
+      );
+
+      break;
+
+    case "analysis":
+
+      updateAnalysis(
+        message.data||message
+      );
+
+      break;
+
+    case "news":
+
+      updateNews(
+        message.data||[]
+      );
+
+      break;
+
+    case "forecast":
+
+      updateForecast(
+        message.data||message
+      );
+
+      break;
+
+    case "newsVerification":
+
+      updateVerification(
+        message.data||message
+      );
+
+      break;
+
+    case "positions":
+
+      updatePositions(
+        message.data||[]
+      );
+
+      break;
+
+    case "safety":
+
+      updateSafety(
+        message.data||message
+      );
+
+      break;
+
+    case "error":
+
+      log(
+        message.message||"Server error",
+        "error"
+      );
+
+      break;
+
+  }
+
+}
+
+
+/* =====================================================
+   DASHBOARD INITIAL LOAD
+===================================================== */
+
+async function loadDashboard(){
+
+  try{
+
+    const response=
+      await fetch(
+        "/api/dashboard?symbol="+
+        encodeURIComponent(state.symbol)+
+        "&timeframe="+
+        encodeURIComponent(state.timeframe)
+      );
+
+    if(!response.ok) return;
+
+    const data=
+      await response.json();
+
+    if(data.tick)
+      updateTick(data.tick);
+
+    if(data.candles)
+      updateCandles(data.candles);
+
+    if(data.analysis)
+      updateAnalysis(data.analysis);
+
+    if(data.news)
+      updateNews(data.news);
+
+    if(data.positions)
+      updatePositions(data.positions);
+
+    if(data.safety)
+      updateSafety(data.safety);
+
+  }catch(error){
+
+    log(
+      "Waiting for live MT5 data...",
+      "warn"
+    );
+
+  }
+
+}
+
+
+/* =====================================================
+   MARKET
+===================================================== */
+
+function updateTick(data){
+
+  const price=
+    Number(
+      data.price ??
+      data.last ??
+      data.close ??
+      data.bid ??
+      0
+    );
+
+  if(!price) return;
+
+  const previous=state.lastPrice;
+
+  state.lastPrice=price;
+
+  $("price").textContent=num(price,5);
+
+  $("bid").textContent=
+    num(data.bid??price,5);
+
+  $("ask").textContent=
+    num(data.ask??price,5);
+
+  $("spread").textContent=
+    num(
+      data.spread ??
+      Math.abs(
+        Number(data.ask??price)-
+        Number(data.bid??price)
+      ),
+      5
+    );
+
+  $("tickTime").textContent=
+    new Date(
+      data.time||Date.now()
+    ).toLocaleTimeString();
+
+  $("lastUpdate").textContent=
+    "UPDATED "+
+    new Date().toLocaleTimeString();
+
+  if(previous){
+
+    const change=price-previous;
+
+    $("change").textContent=
+      change>=0
+        ? "▲ "+num(change,5)
+        : "▼ "+num(change,5);
+
+    $("change").className=
+      change>=0
+        ? "price-up"
+        : "price-down";
+
+  }
+
+  drawChart();
+
+}
+
+
+/* =====================================================
+   CANDLES
+===================================================== */
+
+function updateCandles(data){
+
+  if(!Array.isArray(data)) return;
+
+  state.candles=
+    data.slice(-300);
+
+  drawChart();
+
+}
+
+
+/* =====================================================
+   TECHNICAL / DECISION
+===================================================== */
+
+function updateAnalysis(a){
+
+  state.analysis=a;
+
+  $("rsi").textContent=
+    a.rsi!==undefined
+      ? num(a.rsi,2)
+      : "—";
+
+  $("ema20").textContent=
+    a.ema20!==undefined
+      ? num(a.ema20,5)
+      : "—";
+
+  $("ema50").textContent=
+    a.ema50!==undefined
+      ? num(a.ema50,5)
+      : "—";
+
+  $("ema200").textContent=
+    a.ema200!==undefined
+      ? num(a.ema200,5)
+      : "—";
+
+  $("atr").textContent=
+    a.atr!==undefined
+      ? num(a.atr,5)
+      : "—";
+
+  $("momentum").textContent=
+    a.momentum??"—";
+
+  $("trend").textContent=
+    a.trend??"—";
+
+  $("support").textContent=
+    a.support!==undefined
+      ? num(a.support,5)
+      : "—";
+
+  $("resistance").textContent=
+    a.resistance!==undefined
+      ? num(a.resistance,5)
+      : "—";
+
+
+  const signal=
+    String(
+      a.signal||
+      a.direction||
+      "WAIT"
+    ).toUpperCase();
+
+  setSignal(
+    $("consensus"),
+    signal
+  );
+
+  setSignal(
+    $("finalSignal"),
+    signal
+  );
+
+
+  const confidence=
+    Number(
+      a.confidence||
+      a.finalConfidence||
+      0
+    );
+
+  const agreement=
+    Number(
+      a.agreement||
+      a.aiAgreement||
+      0
+    );
+
+  $("confidence").textContent=
+    percent(confidence);
+
+  $("finalAgreement").textContent=
+    percent(agreement);
+
+  $("agreement").textContent=
+    percent(agreement);
+
+
+  const buy=
+    Number(
+      a.buy||
+      a.buyProbability||
+      0
+    );
+
+  const sell=
+    Number(
+      a.sell||
+      a.sellProbability||
+      0
+    );
+
+  const wait=
+    Number(
+      a.wait||
+      a.waitProbability||
+      0
+    );
+
+  $("buyPct").textContent=percent(buy);
+  $("sellPct").textContent=percent(sell);
+  $("waitPct").textContent=percent(wait);
+
+  $("buyBar").style.width=
+    Math.min(100,Math.max(0,buy))+"%";
+
+  $("sellBar").style.width=
+    Math.min(100,Math.max(0,sell))+"%";
+
+  $("waitBar").style.width=
+    Math.min(100,Math.max(0,wait))+"%";
+
+
+  $("entry").textContent=
+    a.entry!==undefined
+      ? num(a.entry,5)
+      : "—";
+
+  $("sl").textContent=
+    a.sl!==undefined
+      ? num(a.sl,5)
+      : "—";
+
+  $("tp").textContent=
+    a.tp!==undefined
+      ? num(a.tp,5)
+      : "—";
+
+  $("rr").textContent=
+    a.riskReward??"—";
+
+  $("decisionStatus").textContent=
+    a.reason||
+    "ANALYSIS UPDATED";
+
+
+  if(a.ai)
+    updateAI(a.ai);
+
+  if(a.safety)
+    updateSafety(a.safety);
+
+}
+
+
+/* =====================================================
+   SIGNAL
+===================================================== */
+
+function setSignal(element,signal){
+
+  element.classList.remove(
+    "buy",
+    "sell",
+    "wait"
+  );
+
+  if(
+    signal==="BUY"||
+    signal==="LONG"
+  ){
+
+    element.textContent="🐂 BUY";
+
+    element.classList.add("buy");
+
+  }else if(
+    signal==="SELL"||
+    signal==="SHORT"
+  ){
+
+    element.textContent="🐻 SELL";
+
+    element.classList.add("sell");
+
+  }else{
+
+    element.textContent="WAIT";
+
+    element.classList.add("wait");
+
+  }
+
+}
+
+
+/* =====================================================
+   AI
+===================================================== */
+
+function updateAI(ai){
+
+  if(!Array.isArray(ai))
+    return;
+
+  const box=$("aiList");
+
+  box.innerHTML="";
+
+  ai.forEach(item=>{
+
+    const name=
+      item.name||
+      item.provider||
+      "AI";
+
+    const vote=
+      String(
+        item.vote||
+        item.signal||
+        "WAIT"
+      ).toUpperCase();
+
+    const confidence=
+      item.confidence||
+      item.score||
+      0;
+
+    const row=
+      document.createElement("div");
+
+    row.className="airow";
+
+    const cls=
+      vote==="BUY"
+        ? "buy"
+        : vote==="SELL"
+          ? "sell"
+          : "wait";
+
+    row.innerHTML=`
+      <strong>${escapeHtml(name)}</strong>
+      <span class="aivote ${cls}">
+        ${escapeHtml(vote)}
+      </span>
+      <span class="aiconf">
+        ${percent(confidence)}
+      </span>
+    `;
+
+    box.appendChild(row);
+
+  });
+
+}
+
+
+/* =====================================================
+   NEWS
+===================================================== */
+
+let newsInterval=null;
+
+function updateNews(news){
+
+  if(!Array.isArray(news)){
+
+    news=news?[news]:[];
+
+  }
+
+  if(!news.length){
+
+    $("newsName").textContent=
+      "No major event";
+
+    $("newsTime").textContent=
+      "Calendar waiting...";
+
+    $("countdown").textContent=
+      "--:--";
+
+    $("newsMode").textContent=
+      "🟢 MONITOR MODE";
+
+    return;
+
+  }
+
+  const event=news[0];
+
+  $("newsName").textContent=
+    event.name||
+    event.title||
+    "Economic event";
+
+  const time=
+    event.timestamp||
+    event.time||
+    event.datetime;
+
+  if(time){
+
+    const target=
+      new Date(time).getTime();
+
+    $("newsTime").textContent=
+      (
+        event.currency||
+        "USD"
+      )+
+      " • "+
+      new Date(target)
+        .toLocaleString();
+
+    startCountdown(target);
+
+  }
+
+}
+
+
+/* =====================================================
+   NEWS COUNTDOWN
+===================================================== */
+
+function startCountdown(target){
+
+  clearInterval(newsInterval);
+
+  newsInterval=setInterval(()=>{
+
+    const diff=
+      target-Date.now();
+
+    if(diff<=0){
+
+      $("countdown").textContent=
+        "RELEASED";
+
+      $("newsMode").textContent=
+        "🔎 VERIFY ACTUAL";
+
+      clearInterval(newsInterval);
+
+      return;
+
+    }
+
+    const seconds=
+      Math.floor(diff/1000);
+
+    const hours=
+      Math.floor(seconds/3600);
+
+    const minutes=
+      Math.floor(
+        (seconds%3600)/60
+      );
+
+    const sec=
+      seconds%60;
+
+    $("countdown").textContent=
+      String(hours).padStart(2,"0")+
+      ":"+
+      String(minutes).padStart(2,"0")+
+      ":"+
+      String(sec).padStart(2,"0");
+
+    if(diff<=1800000){
+
+      $("newsMode").textContent=
+        "🟡 PRE-NEWS AI PREDICTION";
+
+    }else{
+
+      $("newsMode").textContent=
+        "🟢 MONITOR MODE";
+
+    }
+
+  },1000);
+
+}
+
+
+/* =====================================================
+   FORECAST
+===================================================== */
+
+function updateForecast(f){
+
+  if(!f) return;
+
+  const direction=
+    String(
+      f.direction||
+      f.signal||
+      "WAIT"
+    ).toUpperCase();
+
+  setSignal(
+    $("forecastDirection"),
+    direction
+  );
+
+  $("forecastConfidence").textContent=
+    percent(
+      f.confidence||
+      f.score||
+      0
+    );
+
+  $("forecastActual").textContent=
+    f.forecast||
+    direction;
+
+}
+
+
+/* =====================================================
+   VERIFICATION
+===================================================== */
+
+function updateVerification(v){
+
+  if(!v) return;
+
+  $("forecastActual").textContent=
+    v.forecast??"—";
+
+  $("actual").textContent=
+    v.actual??"PENDING";
+
+  $("surprise").textContent=
+    v.surprise??"—";
+
+  $("usdImpact").textContent=
+    v.usdImpact??"—";
+
+  $("volatility").textContent=
+    v.volatility??"—";
+
+  $("verification").textContent=
+    v.status??"PENDING";
+
+}
+
+
+/* =====================================================
+   SAFETY
+===================================================== */
+
+function updateSafety(s){
+
+  if(!s) return;
+
+  const map={
+    spread:"safeSpread",
+    risk:"safeRisk",
+    dailyLoss:"safeLoss",
+    positions:"safePositions",
+    duplicate:"safeDuplicate",
+    cooldown:"safeCooldown",
+    news:"safeNews",
+    staleData:"safeStale",
+    sltp:"safeSLTP",
+    trailing:"safeTrailing"
+  };
+
+  Object.entries(map).forEach(
+    ([key,id])=>{
+
+      if(s[key]===undefined)
+        return;
+
+      const ok=
+        s[key]===true||
+        s[key]==="PASS"||
+        s[key]==="READY";
+
+      const element=$(id);
+
+      element.textContent=
+        ok
+          ? "✓ "+
+            (
+              key==="trailing"
+                ? "READY"
+                : "PASS"
+            )
+          : "✕ BLOCKED";
+
+      element.className=
+        ok
+          ? "pass"
+          : "fail";
+
+    }
+  );
+
+  const safe=
+    s.overall??
+    s.safe??
+    true;
+
+  $("safetyOverall").textContent=
+    safe
+      ? "✓ SAFE"
+      : "✕ BLOCKED";
+
+  $("safetyOverall").className=
+    safe
+      ? "pass"
+      : "fail";
+
+}
+
+
+/* =====================================================
+   POSITIONS
+===================================================== */
+
+function updatePositions(list){
+
+  if(!Array.isArray(list))
+    return;
+
+  $("positionCount").textContent=
+    list.length+
+    " POSITION"+
+    (list.length===1?"":"S");
+
+  const body=$("positions");
+
+  if(!list.length){
+
+    body.innerHTML=`
+      <tr>
+        <td colspan="9"
+            style="text-align:center;color:#657386">
+          No MT5 positions received
+        </td>
+      </tr>
+    `;
+
+    return;
+
+  }
+
+  body.innerHTML=
+    list.map(p=>{
+
+      const profit=
+        Number(p.profit??0);
+
+      return `
+        <tr>
+          <td>${escapeHtml(p.ticket??"—")}</td>
+          <td>${escapeHtml(p.symbol??"—")}</td>
+          <td>${escapeHtml(p.type??"—")}</td>
+          <td>${escapeHtml(p.volume??p.lots??"—")}</td>
+          <td>${num(p.openPrice??p.open,5)}</td>
+          <td>${num(p.sl,5)}</td>
+          <td>${num(p.tp,5)}</td>
+          <td class="${profit>=0?"buy":"sell"}">
+            ${profit>=0?"+":""}${profit.toFixed(2)}
+          </td>
+          <td>${escapeHtml(p.status??"OPEN")}</td>
+        </tr>
+      `;
+
+    }).join("");
+
+}
+
+
+/* =====================================================
+   CHART
+===================================================== */
+
+function drawChart(){
+
+  const canvas=$("chart");
+
+  if(!canvas) return;
+
+  const rect=
+    canvas.parentElement.getBoundingClientRect();
+
+  const dpr=
+    window.devicePixelRatio||1;
+
+  canvas.width=
+    rect.width*dpr;
+
+  canvas.height=
+    rect.height*dpr;
+
+  const ctx=
+    canvas.getContext("2d");
+
+  ctx.scale(dpr,dpr);
+
+  const width=rect.width;
+  const height=rect.height;
+
+  ctx.clearRect(
+    0,
+    0,
+    width,
+    height
+  );
+
+  ctx.strokeStyle="#101923";
+
+  ctx.lineWidth=1;
+
+  for(let i=1;i<8;i++){
+
+    const y=
+      height*i/8;
+
+    ctx.beginPath();
+
+    ctx.moveTo(0,y);
+
+    ctx.lineTo(width,y);
+
+    ctx.stroke();
+
+  }
+
+  const values=
+    state.candles
+      .map(c=>
+        Number(
+          c.close??
+          c.price??
+          c.last??
+          0
+        )
+      )
+      .filter(Boolean);
+
+  if(
+    values.length<2 &&
+    state.lastPrice
+  ){
+
+    values.push(state.lastPrice);
+
+  }
+
+  if(values.length<2)
+    return;
+
+  const min=
+    Math.min(...values);
+
+  const max=
+    Math.max(...values);
+
+  const range=
+    max-min||1;
+
+  ctx.beginPath();
+
+  values.forEach((value,index)=>{
+
+    const x=
+      index*
+      (width/(values.length-1));
+
+    const y=
+      height-
+      ((value-min)/range)*
+      (height-25)-
+      10;
+
+    if(index===0)
+      ctx.moveTo(x,y);
+    else
+      ctx.lineTo(x,y);
+
+  });
+
+  ctx.strokeStyle="#16e784";
+
+  ctx.lineWidth=2;
+
+  ctx.stroke();
+
+}
+
+
+window.addEventListener(
+  "resize",
+  drawChart
+);
+
+
+/* =====================================================
+   CONTROLS
+===================================================== */
+
+$("symbol").onchange=()=>{
+
+  state.symbol=$("symbol").value;
+
+  $("decisionSymbol").textContent=
+    state.symbol;
+
+  send({
+    type:"subscribe",
+    symbol:state.symbol,
+    timeframe:state.timeframe
+  });
+
+  log(
+    "Symbol changed to "+state.symbol,
+    "info"
+  );
+
+};
+
+
+$("timeframe").onchange=()=>{
+
+  state.timeframe=
+    $("timeframe").value;
+
+  $("decisionTF").textContent=
+    state.timeframe;
+
+  send({
+    type:"subscribe",
+    symbol:state.symbol,
+    timeframe:state.timeframe
+  });
+
+};
+
+
+$("mode").onchange=()=>{
+
+  state.mode=$("mode").value;
+
+  $("executionMode").textContent=
+    state.mode==="analysis"
+      ? "ANALYSIS ONLY"
+      : state.mode==="paper"
+        ? "PAPER TRADING"
+        : "LIVE EXECUTION";
+
+};
+
+
+/* =====================================================
+   SCAN
+===================================================== */
+
+$("scanBtn").onclick=()=>{
+
+  send({
+    type:"scan",
+    symbol:state.symbol,
+    timeframe:state.timeframe
+  });
+
+  log(
+    "Scanning "+
+    state.symbol+
+    " "+
+    state.timeframe+
+    "...",
+    "info"
+  );
+
+};
+
+
+/* =====================================================
+   STOP
+===================================================== */
+
+$("stopBtn").onclick=()=>{
+
+  send({
+    type:"stop"
+  });
+
+  log(
+    "Scanner stopped.",
+    "warn"
+  );
+
+};
+
+
+/* =====================================================
+   ALERT
+===================================================== */
+
+$("alertBtn").onclick=()=>{
+
+  send({
+    type:"alert",
+    symbol:state.symbol,
+    analysis:state.analysis
+  });
+
+  log(
+    "Alert requested.",
+    "ok"
+  );
+
+};
+
+
+/* =====================================================
+   PAPER TRADE
+===================================================== */
+
+$("paperBtn").onclick=()=>{
+
+  send({
+    type:"paper_trade",
+    symbol:state.symbol,
+    analysis:state.analysis
+  });
+
+  log(
+    "Paper trade requested.",
+    "info"
+  );
+
+};
+
+
+/* =====================================================
+   LIVE EXECUTION
+===================================================== */
+
+$("executeBtn").onclick=()=>{
+
+  if(state.mode!=="live"){
+
+    log(
+      "Live execution is disabled. Select LIVE EXECUTION first.",
+      "warn"
+    );
+
+    return;
+
+  }
+
+  if(
+    !confirm(
+      "LIVE MT5 EXECUTION\n\n"+
+      "This can place a real trade.\n"+
+      "Continue?"
+    )
+  ){
+
+    return;
+
+  }
+
+  send({
+    type:"execute",
+    symbol:state.symbol,
+    analysis:state.analysis
+  });
+
+  log(
+    "MT5 execution request sent.",
+    "warn"
+  );
+
+};
+
+
+/* =====================================================
+   CLEAR LOG
+===================================================== */
+
+$("clearLog").onclick=()=>{
+
+  $("log").innerHTML="";
+
+};
+
+</script>
+
+</body>
+  </html>
