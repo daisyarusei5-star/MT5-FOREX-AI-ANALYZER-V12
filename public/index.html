@@ -1,3 +1,2072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="theme-color" content="#05080d">
+<meta name="robots" content="noindex,nofollow">
+
+<title>MT5 FOREX AI ANALYZER V12</title>
+
+<style>
+*{
+  box-sizing:border-box;
+}
+
+html,
+body{
+  margin:0;
+  padding:0;
+  min-height:100%;
+  background:#05080d;
+  color:#f4f7fb;
+  font-family:Arial,Helvetica,sans-serif;
+}
+
+body{
+  overflow-x:hidden;
+}
+
+button,
+input,
+select{
+  font:inherit;
+}
+
+button{
+  cursor:pointer;
+}
+
+.hidden{
+  display:none !important;
+}
+
+/* =========================================================
+   LOGIN
+========================================================= */
+
+#loginScreen{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  background:
+    radial-gradient(circle at top,#10251f 0%,#05080d 45%,#020305 100%);
+}
+
+.loginCard{
+  width:100%;
+  max-width:430px;
+  padding:30px;
+  border:1px solid rgba(0,255,157,.25);
+  border-radius:22px;
+  background:rgba(7,12,18,.96);
+  box-shadow:
+    0 0 40px rgba(0,255,157,.08),
+    0 20px 70px rgba(0,0,0,.45);
+}
+
+.logo{
+  text-align:center;
+  font-size:25px;
+  font-weight:900;
+  letter-spacing:.5px;
+}
+
+.brand{
+  text-align:center;
+  margin-top:8px;
+  color:#00ff9d;
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:2px;
+}
+
+.loginTitle{
+  text-align:center;
+  margin:28px 0 18px;
+  font-size:19px;
+}
+
+.inputLabel{
+  display:block;
+  margin-bottom:8px;
+  color:#8e9bae;
+  font-size:12px;
+  font-weight:bold;
+}
+
+#password{
+  width:100%;
+  padding:14px;
+  border:1px solid #263344;
+  border-radius:12px;
+  outline:none;
+  background:#0b1119;
+  color:#fff;
+}
+
+#password:focus{
+  border-color:#00ff9d;
+  box-shadow:0 0 0 2px rgba(0,255,157,.08);
+}
+
+#loginBtn{
+  width:100%;
+  margin-top:15px;
+  padding:14px;
+  border:0;
+  border-radius:12px;
+  background:#00ff9d;
+  color:#00150d;
+  font-weight:900;
+}
+
+#loginBtn:disabled{
+  opacity:.6;
+  cursor:not-allowed;
+}
+
+#loginError{
+  min-height:20px;
+  margin-top:12px;
+  color:#ff6675;
+  text-align:center;
+  font-size:13px;
+}
+
+.support{
+  margin-top:20px;
+  padding-top:15px;
+  border-top:1px solid #1d2835;
+  text-align:center;
+  color:#8491a2;
+  font-size:12px;
+}
+
+.support a{
+  color:#00ff9d;
+  text-decoration:none;
+  font-weight:bold;
+}
+
+/* =========================================================
+   APP
+========================================================= */
+
+#app{
+  display:none;
+  min-height:100vh;
+  padding-bottom:30px;
+}
+
+.topbar{
+  position:sticky;
+  top:0;
+  z-index:50;
+  padding:14px 18px;
+  border-bottom:1px solid #18212d;
+  background:rgba(4,8,13,.95);
+  backdrop-filter:blur(12px);
+}
+
+.topbarInner{
+  max-width:1450px;
+  margin:auto;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:15px;
+}
+
+.title{
+  font-size:20px;
+  font-weight:900;
+}
+
+.subtitle{
+  margin-top:3px;
+  color:#00ff9d;
+  font-size:10px;
+  letter-spacing:1.5px;
+  font-weight:bold;
+}
+
+.headerRight{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+#frontendVersion{
+  color:#7f8c9f;
+  font-size:11px;
+}
+
+#connectionDot{
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  background:#ff4559;
+  box-shadow:0 0 10px rgba(255,69,89,.5);
+}
+
+#connectionDot.online{
+  background:#00ff9d;
+  box-shadow:0 0 12px rgba(0,255,157,.7);
+}
+
+.statusBadge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:5px 9px;
+  border-radius:20px;
+  font-size:10px;
+  font-weight:900;
+}
+
+.statusBadge.online{
+  color:#00ff9d;
+  background:rgba(0,255,157,.08);
+  border:1px solid rgba(0,255,157,.25);
+}
+
+.statusBadge.offline{
+  color:#ff6575;
+  background:rgba(255,80,100,.08);
+  border:1px solid rgba(255,80,100,.25);
+}
+
+/* =========================================================
+   CONTAINER
+========================================================= */
+
+.container{
+  width:min(1450px,calc(100% - 28px));
+  margin:18px auto;
+}
+
+/* =========================================================
+   CONTROL
+========================================================= */
+
+.controls{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-bottom:15px;
+}
+
+.controlCard{
+  padding:15px;
+  border:1px solid #1b2735;
+  border-radius:15px;
+  background:#080e15;
+}
+
+.controlCard label{
+  display:block;
+  margin-bottom:7px;
+  color:#8290a2;
+  font-size:11px;
+  font-weight:bold;
+}
+
+.controlCard select{
+  width:100%;
+  padding:11px;
+  border:1px solid #293545;
+  border-radius:10px;
+  background:#0b121a;
+  color:#fff;
+  outline:none;
+}
+
+.controlCard select:focus{
+  border-color:#00ff9d;
+}
+
+/* =========================================================
+   GRID
+========================================================= */
+
+.grid{
+  display:grid;
+  grid-template-columns:
+    repeat(12,minmax(0,1fr));
+  gap:14px;
+}
+
+.card{
+  min-width:0;
+  padding:16px;
+  border:1px solid #192534;
+  border-radius:17px;
+  background:#080e15;
+  box-shadow:0 8px 25px rgba(0,0,0,.15);
+}
+
+.cardTitle{
+  margin-bottom:14px;
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:1px;
+  color:#aeb8c6;
+}
+
+.span12{
+  grid-column:span 12;
+}
+
+.span8{
+  grid-column:span 8;
+}
+
+.span6{
+  grid-column:span 6;
+}
+
+.span4{
+  grid-column:span 4;
+}
+
+.span3{
+  grid-column:span 3;
+}
+
+/* =========================================================
+   MARKET
+========================================================= */
+
+.marketHeader{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.symbol{
+  font-size:12px;
+  color:#8491a1;
+}
+
+.price{
+  margin-top:5px;
+  font-size:31px;
+  font-weight:900;
+  letter-spacing:1px;
+}
+
+.priceMeta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:10px;
+  color:#8491a1;
+  font-size:11px;
+}
+
+/* =========================================================
+   METRICS
+========================================================= */
+
+.metrics{
+  display:grid;
+  grid-template-columns:
+    repeat(5,minmax(0,1fr));
+  gap:9px;
+}
+
+.metric{
+  padding:12px;
+  border:1px solid #182534;
+  border-radius:12px;
+  background:#070c12;
+}
+
+.metricLabel{
+  color:#778596;
+  font-size:10px;
+}
+
+.metricValue{
+  margin-top:6px;
+  font-size:16px;
+  font-weight:900;
+}
+
+/* =========================================================
+   ACTION
+========================================================= */
+
+.finalBox{
+  padding:20px;
+  border-radius:18px;
+  border:1px solid rgba(0,255,157,.18);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(0,255,157,.06),
+      rgba(8,14,21,.95)
+    );
+}
+
+.finalAction{
+  font-size:38px;
+  font-weight:1000;
+  letter-spacing:2px;
+}
+
+.finalAction.BUY,
+.good{
+  color:#00ff9d;
+}
+
+.finalAction.SELL,
+.bad{
+  color:#ff5669;
+}
+
+.finalAction.WAIT,
+.warn{
+  color:#ffc857;
+}
+
+.neutral{
+  color:#8995a5;
+}
+
+.finalConfidence{
+  margin-top:5px;
+  color:#c7d0da;
+  font-size:14px;
+  font-weight:bold;
+}
+
+.reason{
+  margin-top:14px;
+  padding:12px;
+  border-radius:11px;
+  background:#060a0f;
+  color:#9ca8b7;
+  font-size:12px;
+  line-height:1.5;
+}
+
+.tradeLevels{
+  display:grid;
+  grid-template-columns:
+    repeat(3,minmax(0,1fr));
+  gap:9px;
+  margin-top:12px;
+}
+
+.level{
+  padding:11px;
+  border:1px solid #1b2734;
+  border-radius:10px;
+}
+
+.level span{
+  display:block;
+  color:#778596;
+  font-size:10px;
+}
+
+.level strong{
+  display:block;
+  margin-top:5px;
+  font-size:13px;
+}
+
+/* =========================================================
+   AI
+========================================================= */
+
+.aiList{
+  display:grid;
+  grid-template-columns:
+    repeat(2,minmax(0,1fr));
+  gap:9px;
+}
+
+.aiRow{
+  padding:12px;
+  border:1px solid #182534;
+  border-radius:12px;
+  background:#070c12;
+}
+
+.aiName{
+  font-weight:900;
+  font-size:12px;
+}
+
+.aiAction{
+  margin-top:7px;
+  font-weight:900;
+  font-size:13px;
+}
+
+.aiConfidence{
+  margin-top:4px;
+  color:#7d8999;
+  font-size:10px;
+}
+
+/* =========================================================
+   CONSENSUS
+========================================================= */
+
+.consensus{
+  display:grid;
+  grid-template-columns:
+    repeat(4,minmax(0,1fr));
+  gap:9px;
+}
+
+.consensusItem{
+  padding:12px;
+  text-align:center;
+  border-radius:12px;
+  background:#070c12;
+  border:1px solid #182534;
+}
+
+.consensusValue{
+  font-size:20px;
+  font-weight:900;
+}
+
+.consensusLabel{
+  margin-top:4px;
+  color:#758294;
+  font-size:10px;
+}
+
+/* =========================================================
+   NEWS
+========================================================= */
+
+.newsTop{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+}
+
+.newsMode{
+  color:#ffc857;
+  font-size:12px;
+  font-weight:900;
+}
+
+#newsCountdown{
+  font-weight:900;
+}
+
+.newsList,
+.positions{
+  max-height:280px;
+  overflow:auto;
+}
+
+.newsItem{
+  padding:11px;
+  margin-bottom:8px;
+  border:1px solid #172330;
+  border-radius:10px;
+  background:#070c12;
+  color:#91a0b1;
+  font-size:11px;
+  line-height:1.5;
+}
+
+.newsItem strong{
+  color:#eef4f8;
+}
+
+/* =========================================================
+   SAFETY
+========================================================= */
+
+.safetyGrid{
+  display:grid;
+  grid-template-columns:
+    repeat(3,minmax(0,1fr));
+  gap:9px;
+}
+
+.safetyItem{
+  padding:11px;
+  border-radius:10px;
+  background:#070c12;
+  border:1px solid #172330;
+}
+
+.safetyItem span{
+  display:block;
+  color:#718093;
+  font-size:10px;
+}
+
+.safetyItem strong{
+  display:block;
+  margin-top:5px;
+  font-size:12px;
+}
+
+/* =========================================================
+   CHART
+========================================================= */
+
+.chartWrap{
+  position:relative;
+  width:100%;
+  height:320px;
+  overflow:hidden;
+  border:1px solid #16222f;
+  border-radius:12px;
+  background:#05080d;
+}
+
+#chart{
+  width:100%;
+  height:100%;
+  display:block;
+}
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+.buttonRow{
+  display:flex;
+  flex-wrap:wrap;
+  gap:9px;
+}
+
+.actionBtn{
+  padding:11px 15px;
+  border:1px solid #263444;
+  border-radius:10px;
+  background:#0b121a;
+  color:#fff;
+  font-weight:800;
+}
+
+.actionBtn:hover{
+  border-color:#00ff9d;
+}
+
+.actionBtn.primary{
+  background:#00ff9d;
+  border-color:#00ff9d;
+  color:#00150d;
+}
+
+/* =========================================================
+   LOG
+========================================================= */
+
+#logBox{
+  height:220px;
+  overflow:auto;
+  padding:10px;
+  border-radius:11px;
+  background:#03060a;
+  border:1px solid #141e29;
+  font-family:monospace;
+  font-size:10px;
+}
+
+.logLine{
+  margin-bottom:5px;
+  line-height:1.4;
+}
+
+.logLine.info{
+  color:#8b98a9;
+}
+
+.logLine.ok{
+  color:#00ff9d;
+}
+
+.logLine.warn{
+  color:#ffc857;
+}
+
+.logLine.error{
+  color:#ff5b6e;
+}
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+.footer{
+  max-width:1450px;
+  margin:20px auto 0;
+  padding:15px;
+  text-align:center;
+  color:#586576;
+  font-size:10px;
+  line-height:1.6;
+}
+
+.footer strong{
+  color:#00ff9d;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media(max-width:1050px){
+
+  .span8,
+  .span6{
+    grid-column:span 12;
+  }
+
+  .span4{
+    grid-column:span 6;
+  }
+
+  .span3{
+    grid-column:span 6;
+  }
+
+}
+
+@media(max-width:700px){
+
+  .container{
+    width:calc(100% - 18px);
+  }
+
+  .topbar{
+    padding:12px;
+  }
+
+  .topbarInner{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .headerRight{
+    width:100%;
+    justify-content:space-between;
+  }
+
+  .controls{
+    grid-template-columns:1fr;
+  }
+
+  .span4,
+  .span3{
+    grid-column:span 12;
+  }
+
+  .metrics{
+    grid-template-columns:
+      repeat(2,minmax(0,1fr));
+  }
+
+  .metrics .metric:last-child{
+    grid-column:span 2;
+  }
+
+  .aiList{
+    grid-template-columns:1fr;
+  }
+
+  .consensus{
+    grid-template-columns:
+      repeat(2,minmax(0,1fr));
+  }
+
+  .safetyGrid{
+    grid-template-columns:
+      repeat(2,minmax(0,1fr));
+  }
+
+  .finalAction{
+    font-size:31px;
+  }
+
+  .tradeLevels{
+    grid-template-columns:1fr;
+  }
+
+  .chartWrap{
+    height:270px;
+  }
+
+}
+
+@media(max-width:420px){
+
+  .loginCard{
+    padding:22px;
+  }
+
+  .metrics{
+    grid-template-columns:1fr 1fr;
+  }
+
+  .safetyGrid{
+    grid-template-columns:1fr;
+  }
+
+}
+</style>
+</head>
+
+<body>
+
+<!-- =======================================================
+     LOGIN SCREEN
+======================================================= -->
+
+<section id="loginScreen">
+
+  <div class="loginCard">
+
+    <div class="logo">
+      🔥 MT5 FOREX AI ANALYZER V12
+    </div>
+
+    <div class="brand">
+      POWERED BY ELISY ANALYSIS DEVELOPER
+    </div>
+
+    <div class="loginTitle">
+      🔐 SECURE LOGIN
+    </div>
+
+    <label
+      class="inputLabel"
+      for="password"
+    >
+      BOT PASSWORD
+    </label>
+
+    <input
+      id="password"
+      type="password"
+      autocomplete="current-password"
+      placeholder="Enter bot password"
+    >
+
+    <button id="loginBtn">
+      🔐 LOGIN
+    </button>
+
+    <div id="loginError"></div>
+
+    <div class="support">
+      📱 Support:
+      <a
+        href="https://wa.me/254701859605"
+        target="_blank"
+        rel="noopener"
+      >
+        +254 701 859 605
+      </a>
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =======================================================
+     MAIN APP
+======================================================= -->
+
+<main id="app">
+
+  <!-- TOP BAR -->
+
+  <header class="topbar">
+
+    <div class="topbarInner">
+
+      <div>
+
+        <div class="title">
+          🔥 MT5 FOREX AI ANALYZER V12
+        </div>
+
+        <div class="subtitle">
+          POWERED BY ELISY ANALYSIS DEVELOPER
+        </div>
+
+      </div>
+
+      <div class="headerRight">
+
+        <span id="frontendVersion">
+          V12.0.2 • Dashboard
+        </span>
+
+        <span id="connectionDot"></span>
+
+        <span
+          id="serverStatus"
+          class="statusBadge offline"
+        >
+          SERVER OFFLINE
+        </span>
+
+      </div>
+
+    </div>
+
+  </header>
+
+
+  <div class="container">
+
+    <!-- CONTROLS -->
+
+    <section class="controls">
+
+      <div class="controlCard">
+
+        <label for="symbol">
+          MT5 SYMBOL
+        </label>
+
+        <select id="symbol">
+
+          <option value="EURUSD">
+            EURUSD
+          </option>
+
+          <option value="GBPUSD">
+            GBPUSD
+          </option>
+
+          <option value="USDJPY">
+            USDJPY
+          </option>
+
+          <option value="USDCHF">
+            USDCHF
+          </option>
+
+          <option value="AUDUSD">
+            AUDUSD
+          </option>
+
+          <option value="USDCAD">
+            USDCAD
+          </option>
+
+          <option value="NZDUSD">
+            NZDUSD
+          </option>
+
+          <option value="XAUUSD">
+            XAUUSD
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <div class="controlCard">
+
+        <label for="timeframe">
+          TIMEFRAME
+        </label>
+
+        <select id="timeframe">
+
+          <option value="M1">
+            M1
+          </option>
+
+          <option value="M5">
+            M5
+          </option>
+
+          <option value="M15">
+            M15
+          </option>
+
+          <option value="M30">
+            M30
+          </option>
+
+          <option value="H1">
+            H1
+          </option>
+
+          <option value="H4">
+            H4
+          </option>
+
+          <option value="D1">
+            D1
+          </option>
+
+        </select>
+
+      </div>
+
+    </section>
+
+
+    <!-- DASHBOARD GRID -->
+
+    <section class="grid">
+
+
+      <!-- =================================================
+           MARKET
+      ================================================== -->
+
+      <div class="card span8">
+
+        <div class="cardTitle">
+          📊 LIVE MT5 MARKET
+        </div>
+
+        <div class="marketHeader">
+
+          <div>
+
+            <div
+              id="priceSymbol"
+              class="symbol"
+            >
+              EURUSD
+            </div>
+
+            <div
+              id="livePrice"
+              class="price"
+            >
+              --
+            </div>
+
+            <div class="priceMeta">
+
+              <span id="priceBid">
+                Bid: --
+              </span>
+
+              <span id="priceAsk">
+                Ask: --
+              </span>
+
+              <span id="spread">
+                Spread: --
+              </span>
+
+            </div>
+
+          </div>
+
+          <div>
+
+            <div
+              id="mt5Status"
+              class="statusBadge offline"
+            >
+              MT5 OFFLINE
+            </div>
+
+            <div
+              id="dataAge"
+              style="
+                margin-top:8px;
+                color:#778596;
+                font-size:10px;
+                text-align:right;
+              "
+            >
+              WAITING
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           MARKET REGIME
+      ================================================== -->
+
+      <div class="card span4">
+
+        <div class="cardTitle">
+          🌐 MARKET REGIME
+        </div>
+
+        <div
+          id="marketRegime"
+          style="
+            font-size:25px;
+            font-weight:900;
+            color:#00ff9d;
+          "
+        >
+          WAITING
+        </div>
+
+        <div
+          style="
+            margin-top:10px;
+            color:#738092;
+            font-size:11px;
+          "
+        >
+          Live technical market condition
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           CHART
+      ================================================== -->
+
+      <div class="card span8">
+
+        <div class="cardTitle">
+          📈 REAL MT5 PRICE GRAPH
+        </div>
+
+        <div class="chartWrap">
+          <canvas id="chart"></canvas>
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           CANDLE INFO
+      ================================================== -->
+
+      <div class="card span4">
+
+        <div class="cardTitle">
+          🕯️ MARKET DATA
+        </div>
+
+        <div class="metrics">
+
+          <div class="metric">
+
+            <div class="metricLabel">
+              CANDLES
+            </div>
+
+            <div
+              id="candleCount"
+              class="metricValue"
+            >
+              0
+            </div>
+
+          </div>
+
+          <div class="metric">
+
+            <div class="metricLabel">
+              TICK
+            </div>
+
+            <div
+              id="tickValue"
+              class="metricValue"
+            >
+              --
+            </div>
+
+          </div>
+
+          <div class="metric">
+
+            <div class="metricLabel">
+              SPREAD
+            </div>
+
+            <div
+              id="spreadTechnical"
+              class="metricValue"
+            >
+              --
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           TECHNICAL ENGINE
+      ================================================== -->
+
+      <div class="card span12">
+
+        <div class="cardTitle">
+          ⚙️ TECHNICAL ENGINE
+        </div>
+
+        <div class="metrics">
+
+          <div class="metric">
+
+            <div class="metricLabel">
+              RSI (14)
+            </div>
+
+            <div
+              id="rsi"
+              class="metricValue"
+            >
+              --
+            </div>
+
+          </div>
+
+
+          <div class="metric">
+
+            <div class="metricLabel">
+              EMA 20
+            </div>
+
+            <div
+              id="ema20"
+              class="metricValue"
+            >
+              --
+            </div>
+
+          </div>
+
+
+          <div class="metric">
+
+            <div class="metricLabel">
+              EMA 50
+            </div>
+
+            <div
+              id="ema50"
+              class="metricValue"
+            >
+              --
+            </div>
+
+          </div>
+
+
+          <div class="metric">
+
+            <div class="metricLabel">
+              EMA 200
+            </div>
+
+            <div
+              id="ema200"
+              class="metricValue"
+            >
+              --
+            </div>
+
+          </div>
+
+
+          <div class="metric">
+
+            <div class="metricLabel">
+              ATR
+            </div>
+
+            <div
+              id="atr"
+              class="metricValue"
+            >
+              --
+            </div>
+
+          </div>
+
+
+          <div class="metric">
+
+            <div class="metricLabel">
+              MOMENTUM
+            </div>
+
+            <div
+              id="momentum"
+              class="metricValue"
+            >
+              --
+            </div>
+
+          </div>
+
+
+          <div class="metric">
+
+            <div class="metricLabel">
+              TREND
+            </div>
+
+            <div
+              id="trend"
+              class="metricValue"
+            >
+              --
+            </div>
+
+          </div>
+
+
+          <div class="metric">
+
+            <div class="metricLabel">
+              CANDLE
+            </div>
+
+            <div
+              id="candleStructure"
+              class="metricValue"
+            >
+              --
+            </div>
+
+          </div>
+
+
+          <div class="metric">
+
+            <div class="metricLabel">
+              SUPPORT
+            </div>
+
+            <div
+              id="support"
+              class="metricValue"
+            >
+              --
+            </div>
+
+          </div>
+
+
+          <div class="metric">
+
+            <div class="metricLabel">
+              RESISTANCE
+            </div>
+
+            <div
+              id="resistance"
+              class="metricValue"
+            >
+              --
+            </div>
+
+          </div>
+
+
+          <div class="metric">
+
+            <div class="metricLabel">
+              TECHNICAL DECISION
+            </div>
+
+            <div
+              id="technicalDecision"
+              class="metricValue warn"
+            >
+              WAIT
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           FINAL DECISION
+      ================================================== -->
+
+      <div class="card span6">
+
+        <div class="cardTitle">
+          🎯 FINAL AI DECISION
+        </div>
+
+        <div class="finalBox">
+
+          <div
+            id="finalAction"
+            class="finalAction WAIT"
+          >
+            WAIT
+          </div>
+
+          <div
+            id="finalConfidence"
+            class="finalConfidence"
+          >
+            0%
+          </div>
+
+          <div
+            id="finalReason"
+            class="reason"
+          >
+            Waiting for sufficient confirmation.
+          </div>
+
+          <div class="tradeLevels">
+
+            <div class="level">
+
+              <span>
+                ENTRY
+              </span>
+
+              <strong id="entryPrice">
+                --
+              </strong>
+
+            </div>
+
+
+            <div class="level">
+
+              <span>
+                STOP LOSS
+              </span>
+
+              <strong id="stopLoss">
+                --
+              </strong>
+
+            </div>
+
+
+            <div class="level">
+
+              <span>
+                TAKE PROFIT
+              </span>
+
+              <strong id="takeProfit">
+                --
+              </strong>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <div
+          class="buttonRow"
+          style="margin-top:12px"
+        >
+
+          <button
+            id="paperTradeBtn"
+            class="actionBtn primary"
+          >
+            📝 PAPER TRADE
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           AI ANALYSTS
+      ================================================== -->
+
+      <div class="card span6">
+
+        <div class="cardTitle">
+          🤖 SIX AI ANALYSTS
+        </div>
+
+        <div
+          id="aiStatus"
+          style="
+            margin-bottom:10px;
+            color:#6f7d8d;
+            font-size:10px;
+          "
+        >
+          AI engine waiting...
+        </div>
+
+        <div class="aiList">
+
+
+          <div
+            id="ai-openai"
+            class="aiRow"
+          >
+
+            <div class="aiName">
+              OpenAI
+            </div>
+
+            <div class="aiAction neutral">
+              WAIT
+            </div>
+
+            <div class="aiConfidence">
+              Confidence: 0%
+            </div>
+
+          </div>
+
+
+          <div
+            id="ai-deepseek"
+            class="aiRow"
+          >
+
+            <div class="aiName">
+              DeepSeek
+            </div>
+
+            <div class="aiAction neutral">
+              WAIT
+            </div>
+
+            <div class="aiConfidence">
+              Confidence: 0%
+            </div>
+
+          </div>
+
+
+          <div
+            id="ai-gemini"
+            class="aiRow"
+          >
+
+            <div class="aiName">
+              Gemini
+            </div>
+
+            <div class="aiAction neutral">
+              WAIT
+            </div>
+
+            <div class="aiConfidence">
+              Confidence: 0%
+            </div>
+
+          </div>
+
+
+          <div
+            id="ai-groq"
+            class="aiRow"
+          >
+
+            <div class="aiName">
+              Groq
+            </div>
+
+            <div class="aiAction neutral">
+              WAIT
+            </div>
+
+            <div class="aiConfidence">
+              Confidence: 0%
+            </div>
+
+          </div>
+
+
+          <div
+            id="ai-openrouter"
+            class="aiRow"
+          >
+
+            <div class="aiName">
+              OpenRouter
+            </div>
+
+            <div class="aiAction neutral">
+              WAIT
+            </div>
+
+            <div class="aiConfidence">
+              Confidence: 0%
+            </div>
+
+          </div>
+
+
+          <div
+            id="ai-mistral"
+            class="aiRow"
+          >
+
+            <div class="aiName">
+              Mistral AI
+            </div>
+
+            <div class="aiAction neutral">
+              WAIT
+            </div>
+
+            <div class="aiConfidence">
+              Confidence: 0%
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           CONSENSUS
+      ================================================== -->
+
+      <div class="card span6">
+
+        <div class="cardTitle">
+          🧠 CONSENSUS ENGINE
+        </div>
+
+        <div class="consensus">
+
+          <div class="consensusItem">
+
+            <div
+              id="buyPercent"
+              class="consensusValue good"
+            >
+              0%
+            </div>
+
+            <div class="consensusLabel">
+              BUY
+            </div>
+
+          </div>
+
+
+          <div class="consensusItem">
+
+            <div
+              id="sellPercent"
+              class="consensusValue bad"
+            >
+              0%
+            </div>
+
+            <div class="consensusLabel">
+              SELL
+            </div>
+
+          </div>
+
+
+          <div class="consensusItem">
+
+            <div
+              id="waitPercent"
+              class="consensusValue warn"
+            >
+              100%
+            </div>
+
+            <div class="consensusLabel">
+              WAIT
+            </div>
+
+          </div>
+
+
+          <div class="consensusItem">
+
+            <div
+              id="aiAgreement"
+              class="consensusValue"
+            >
+              0%
+            </div>
+
+            <div class="consensusLabel">
+              AI AGREEMENT
+            </div>
+
+          </div>
+
+        </div>
+
+        <div
+          style="
+            margin-top:12px;
+            color:#748193;
+            font-size:11px;
+          "
+        >
+          Technical confirmation:
+          <strong
+            id="technicalConfirmation"
+            style="color:#fff"
+          >
+            WAIT
+          </strong>
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           NEWS ENGINE
+      ================================================== -->
+
+      <div class="card span6">
+
+        <div class="cardTitle">
+          📰 NEWS & MACRO ENGINE
+        </div>
+
+        <div class="newsTop">
+
+          <div>
+
+            <div
+              style="
+                color:#748193;
+                font-size:10px;
+              "
+            >
+              MODE
+            </div>
+
+            <div
+              id="newsMode"
+              class="newsMode"
+            >
+              MONITOR
+            </div>
+
+          </div>
+
+          <div>
+
+            <div
+              style="
+                color:#748193;
+                font-size:10px;
+                text-align:right;
+              "
+            >
+              COUNTDOWN
+            </div>
+
+            <div
+              id="newsCountdown"
+              style="
+                margin-top:3px;
+                text-align:right;
+              "
+            >
+              --
+            </div>
+
+          </div>
+
+        </div>
+
+        <div id="newsList">
+
+          <div class="newsItem">
+            <strong>
+              No upcoming verified events
+            </strong>
+
+            <br>
+
+            <span>
+              News adapter has not supplied an event.
+            </span>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           PRE NEWS
+      ================================================== -->
+
+      <div class="card span6">
+
+        <div class="cardTitle">
+          🔮 PRE-NEWS AI FORECAST
+        </div>
+
+        <div
+          id="preNewsForecast"
+          class="reason"
+          style="
+            min-height:100px;
+            margin-top:0;
+          "
+        >
+          Waiting for news event data...
+        </div>
+
+        <div
+          class="cardTitle"
+          style="margin-top:15px"
+        >
+          ✅ ACTUAL NEWS VERIFICATION
+        </div>
+
+        <div
+          id="newsVerification"
+          class="reason"
+          style="margin-top:0"
+        >
+          Waiting for released news...
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           SAFETY ENGINE
+      ================================================== -->
+
+      <div class="card span6">
+
+        <div class="cardTitle">
+          🛡️ SAFETY ENGINE
+        </div>
+
+        <div class="safetyGrid">
+
+          <div class="safetyItem">
+
+            <span>
+              SPREAD
+            </span>
+
+            <strong id="safetySpread">
+              WAITING
+            </strong>
+
+          </div>
+
+
+          <div class="safetyItem">
+
+            <span>
+              DAILY LOSS
+            </span>
+
+            <strong id="dailyLoss">
+              0%
+            </strong>
+
+          </div>
+
+
+          <div class="safetyItem">
+
+            <span>
+              MAX POSITIONS
+            </span>
+
+            <strong id="maxPositions">
+              3
+            </strong>
+
+          </div>
+
+
+          <div class="safetyItem">
+
+            <span>
+              COOLDOWN
+            </span>
+
+            <strong id="cooldown">
+              READY
+            </strong>
+
+          </div>
+
+
+          <div class="safetyItem">
+
+            <span>
+              NEWS RISK
+            </span>
+
+            <strong id="newsRisk">
+              UNKNOWN
+            </strong>
+
+          </div>
+
+
+          <div class="safetyItem">
+
+            <span>
+              DATA STATUS
+            </span>
+
+            <strong id="staleData">
+              WAITING
+            </strong>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           PAPER POSITIONS
+      ================================================== -->
+
+      <div class="card span6">
+
+        <div class="cardTitle">
+          📝 PAPER TRADING
+        </div>
+
+        <div
+          class="buttonRow"
+          style="margin-bottom:10px"
+        >
+
+          <button
+            id="clearTradeBtn"
+            class="actionBtn"
+          >
+            🗑️ CLEAR PAPER TRADES
+          </button>
+
+        </div>
+
+        <div id="positions">
+
+          <div class="newsItem">
+            No paper positions.
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           EVENT LOG
+      ================================================== -->
+
+      <div class="card span12">
+
+        <div
+          style="
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:10px;
+            margin-bottom:10px;
+          "
+        >
+
+          <div class="cardTitle" style="margin:0">
+            📡 SYSTEM EVENT LOG
+          </div>
+
+          <button
+            id="clearLog"
+            class="actionBtn"
+          >
+            CLEAR LOG
+          </button>
+
+        </div>
+
+        <div id="logBox"></div>
+
+      </div>
+
+
+    </section>
+
+  </div>
+
+
+  <footer class="footer">
+
+    <strong>
+      MT5 FOREX AI ANALYZER V12
+    </strong>
+
+    <br>
+
+    POWERED BY ELISY ANALYSIS DEVELOPER
+
+    <br>
+
+    Analysis system only • AI predictions are not guaranteed
+    • Verify market conditions before any manual decision.
+
+    <br><br>
+
+    📱 Support:
+    <a
+      href="https://wa.me/254701859605"
+      target="_blank"
+      rel="noopener"
+      style="color:#00ff9d;text-decoration:none"
+    >
+      +254 701 859 605
+    </a>
+
+  </footer>
+
+</main>
+
+
+<!-- =======================================================
+     V12.0.2 JAVASCRIPT
+======================================================= -->
+
 <script>
 "use strict";
 
@@ -8,21 +2077,25 @@
 const FRONTEND_VERSION = "12.0.2";
 
 
-/* =========================================================
-   HELPERS
-========================================================= */
-
 function $(id){
   return document.getElementById(id);
 }
 
-function safeText(value, fallback="--"){
-  if(value === undefined || value === null || value === ""){
+
+function safeText(value,fallback="--"){
+
+  if(
+    value === undefined ||
+    value === null ||
+    value === ""
+  ){
     return fallback;
   }
 
   return String(value);
+
 }
+
 
 function percentage(value){
 
@@ -33,7 +2106,9 @@ function percentage(value){
   }
 
   return Math.round(n) + "%";
+
 }
+
 
 function escapeHTML(value){
 
@@ -97,8 +2172,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   );
 
 
-  const version =
-    $("frontendVersion");
+  const version = $("frontendVersion");
 
   if(version){
 
@@ -109,8 +2183,6 @@ document.addEventListener("DOMContentLoaded",()=>{
 
   }
 
-
-  /* Symbol */
 
   $("symbol")?.addEventListener(
     "change",
@@ -133,8 +2205,6 @@ document.addEventListener("DOMContentLoaded",()=>{
   );
 
 
-  /* Timeframe */
-
   $("timeframe")?.addEventListener(
     "change",
     ()=>{
@@ -155,8 +2225,6 @@ document.addEventListener("DOMContentLoaded",()=>{
     }
   );
 
-
-  /* Login */
 
   $("loginBtn")?.addEventListener(
     "click",
@@ -180,8 +2248,6 @@ document.addEventListener("DOMContentLoaded",()=>{
   );
 
 
-  /* Clear log */
-
   $("clearLog")?.addEventListener(
     "click",
     ()=>{
@@ -197,15 +2263,11 @@ document.addEventListener("DOMContentLoaded",()=>{
   );
 
 
-  /* Paper trade */
-
   $("paperTradeBtn")?.addEventListener(
     "click",
     createPaperTrade
   );
 
-
-  /* Clear trades */
 
   $("clearTradeBtn")?.addEventListener(
     "click",
@@ -240,6 +2302,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     " initialized.",
     "info"
   );
+
 
   log(
     "Login required before dashboard connection.",
@@ -339,6 +2402,7 @@ async function login(){
       response.status
     );
 
+
     console.log(
       "LOGIN RAW:",
       raw
@@ -346,6 +2410,7 @@ async function login(){
 
 
     let data={};
+
 
     try{
 
@@ -387,10 +2452,6 @@ async function login(){
     }
 
 
-    /* ==============================================
-       LOGIN SUCCESS
-    ============================================== */
-
     state.loggedIn=true;
 
 
@@ -400,19 +2461,8 @@ async function login(){
     );
 
 
-    /*
-     * OPEN DASHBOARD IMMEDIATELY.
-     *
-     * Do NOT wait for WebSocket.
-     * Do NOT wait for dashboard API.
-     */
-
     openDashboard();
 
-
-    /*
-     * Start backend communication separately.
-     */
 
     setTimeout(()=>{
 
@@ -437,10 +2487,6 @@ async function login(){
 
     },100);
 
-
-    /*
-     * Load dashboard separately.
-     */
 
     setTimeout(()=>{
 
@@ -484,11 +2530,6 @@ async function login(){
 
 function openDashboard(){
 
-  console.log(
-    "🔥 OPENING DASHBOARD"
-  );
-
-
   const loginScreen =
     $("loginScreen");
 
@@ -496,29 +2537,16 @@ function openDashboard(){
     $("app");
 
 
-  if(!loginScreen){
+  if(!loginScreen || !app){
 
     console.error(
-      "loginScreen element missing"
+      "Dashboard DOM elements missing."
     );
 
     return;
 
   }
 
-
-  if(!app){
-
-    console.error(
-      "app element missing"
-    );
-
-    return;
-
-  }
-
-
-  /* Hide login */
 
   loginScreen.classList.add(
     "hidden"
@@ -527,8 +2555,6 @@ function openDashboard(){
   loginScreen.style.display =
     "none";
 
-
-  /* Show application */
 
   app.classList.remove(
     "hidden"
@@ -551,11 +2577,6 @@ function openDashboard(){
     "hidden";
 
 
-  console.log(
-    "✅ DASHBOARD DOM IS VISIBLE"
-  );
-
-
   log(
     "🔥 Dashboard opened.",
     "ok"
@@ -568,10 +2589,6 @@ function openDashboard(){
   );
 
 
-  /*
-   * Draw empty dashboard immediately.
-   */
-
   setTimeout(
     drawChart,
     50
@@ -581,7 +2598,7 @@ function openDashboard(){
 
 
 /* =========================================================
-   WEBSOCKET URL
+   WEBSOCKET
 ========================================================= */
 
 function websocketUrl(){
@@ -601,16 +2618,10 @@ function websocketUrl(){
 }
 
 
-/* =========================================================
-   CONNECT
-========================================================= */
-
 function connect(){
 
   if(!state.loggedIn){
-
     return;
-
   }
 
 
@@ -624,19 +2635,13 @@ function connect(){
         WebSocket.CONNECTING
     )
   ){
-
     return;
-
   }
 
 
   clearTimeout(
     state.reconnectTimer
   );
-
-
-  const url =
-    websocketUrl();
 
 
   log(
@@ -654,14 +2659,11 @@ function connect(){
   try{
 
     state.ws =
-      new WebSocket(url);
+      new WebSocket(
+        websocketUrl()
+      );
 
   }catch(error){
-
-    console.error(
-      "WebSocket create error:",
-      error
-    );
 
     log(
       "WebSocket creation failed.",
@@ -710,9 +2712,7 @@ function connect(){
           event.data
         );
 
-      handleWSMessage(
-        message
-      );
+      handleWSMessage(message);
 
     }catch(error){
 
@@ -726,19 +2726,12 @@ function connect(){
   };
 
 
-  state.ws.onerror=error=>{
-
-    console.warn(
-      "WebSocket error:",
-      error
-    );
-
+  state.ws.onerror=()=>{
 
     log(
       "WebSocket error.",
       "error"
     );
-
 
     setConnection(
       false,
@@ -752,12 +2745,10 @@ function connect(){
 
     state.serverOnline=false;
 
-
     setConnection(
       false,
       "Server disconnected"
     );
-
 
     log(
       "WebSocket disconnected (" +
@@ -766,17 +2757,12 @@ function connect(){
       "warn"
     );
 
-
     scheduleReconnect();
 
   };
 
 }
 
-
-/* =========================================================
-   SUBSCRIBE
-========================================================= */
 
 function sendSubscription(){
 
@@ -795,23 +2781,15 @@ function sendSubscription(){
 }
 
 
-/* =========================================================
-   RECONNECT
-========================================================= */
-
 function scheduleReconnect(){
 
   if(!state.loggedIn){
-
     return;
-
   }
 
 
   if(state.reconnecting){
-
     return;
-
   }
 
 
@@ -856,10 +2834,6 @@ function scheduleReconnect(){
 }
 
 
-/* =========================================================
-   SEND WS
-========================================================= */
-
 function sendWS(payload){
 
   if(
@@ -895,16 +2869,8 @@ function sendWS(payload){
 function handleWSMessage(message){
 
   if(!message){
-
     return;
-
   }
-
-
-  console.log(
-    "WS:",
-    message
-  );
 
 
   if(
@@ -980,10 +2946,7 @@ function handleWSMessage(message){
    CONNECTION UI
 ========================================================= */
 
-function setConnection(
-  online,
-  text
-){
+function setConnection(online,text){
 
   const dot =
     $("connectionDot");
@@ -995,62 +2958,51 @@ function setConnection(
     $("connectionText");
 
 
-  if(!dot || !status || !connectionText){
+  if(dot){
 
-    return;
-
-  }
-
-
-  if(online){
-
-    dot.classList.add(
-      "online"
-    );
-
-    status.classList.remove(
-      "offline"
-    );
-
-    status.classList.add(
-      "online"
-    );
-
-    status.textContent =
-      "SERVER ONLINE";
-
-  }else{
-
-    dot.classList.remove(
-      "online"
-    );
-
-    status.classList.remove(
-      "online"
-    );
-
-    status.classList.add(
-      "offline"
-    );
-
-    status.textContent =
-      "SERVER OFFLINE";
-
-  }
-
-
-  connectionText.textContent =
-    text || (
+    dot.classList.toggle(
+      "online",
       online
-        ? "Connected"
-        : "Disconnected"
     );
+
+  }
+
+
+  if(status){
+
+    status.className =
+      "statusBadge " +
+      (
+        online
+          ? "online"
+          : "offline"
+      );
+
+    status.textContent =
+      online
+        ? "SERVER ONLINE"
+        : "SERVER OFFLINE";
+
+  }
+
+
+  if(connectionText){
+
+    connectionText.textContent =
+      text ||
+      (
+        online
+          ? "Connected"
+          : "Disconnected"
+      );
+
+  }
 
 }
 
 
 /* =========================================================
-   LOAD DASHBOARD
+   DASHBOARD
 ========================================================= */
 
 async function loadDashboard(){
@@ -1059,9 +3011,7 @@ async function loadDashboard(){
     !state.loggedIn ||
     state.loadingDashboard
   ){
-
     return;
-
   }
 
 
@@ -1092,13 +3042,8 @@ async function loadDashboard(){
       await response.text();
 
 
-    console.log(
-      "DASHBOARD HTTP:",
-      response.status
-    );
-
-
     let data={};
+
 
     try{
 
@@ -1106,11 +3051,6 @@ async function loadDashboard(){
         JSON.parse(raw);
 
     }catch(error){
-
-      console.error(
-        "Dashboard JSON error:",
-        raw
-      );
 
       throw new Error(
         "Server returned invalid JSON"
@@ -1154,13 +3094,12 @@ async function loadDashboard(){
     );
 
 
-    /*
-     * Dashboard remains visible even
-     * when MT5/backend data isn't ready.
-     */
+    if($("finalReason")){
 
-    $("finalReason").textContent =
-      "Dashboard online. Waiting for MT5 data...";
+      $("finalReason").textContent =
+        "Dashboard online. Waiting for MT5 data...";
+
+    }
 
   }finally{
 
@@ -1171,11 +3110,8 @@ async function loadDashboard(){
 }
 
 
-/* =========================================================
-   REQUEST DASHBOARD
-========================================================= */
-
 let dashboardRequestTimer=null;
+
 
 function requestDashboard(){
 
@@ -1200,9 +3136,7 @@ function requestDashboard(){
 function updateDashboard(data){
 
   if(!data){
-
     return;
-
   }
 
 
@@ -1280,9 +3214,12 @@ function updateDashboard(data){
   drawChart();
 
 
-  $("lastUpdate").textContent =
-    "Last update: " +
-    new Date().toLocaleTimeString();
+  $("lastUpdate") &&
+  (
+    $("lastUpdate").textContent =
+      "Last update: " +
+      new Date().toLocaleTimeString()
+  );
 
 }
 
@@ -1294,9 +3231,7 @@ function updateDashboard(data){
 function updateMT5(data){
 
   if(!data){
-
     return;
-
   }
 
 
@@ -1404,18 +3339,6 @@ function updateMT5(data){
 
   }
 
-
-  if(
-    data.timestamp ||
-    data.time ||
-    data.serverTime
-  ){
-
-    $("dataAge").textContent =
-      "LIVE";
-
-  }
-
 }
 
 
@@ -1426,9 +3349,7 @@ function updateMT5(data){
 function updateTechnical(data){
 
   if(!data){
-
     return;
-
   }
 
 
@@ -1518,10 +3439,6 @@ function updateTechnical(data){
 }
 
 
-/* =========================================================
-   AI
-========================================================= */
-
 const AI_IDS={
 
   openai:"ai-openai",
@@ -1559,9 +3476,7 @@ const AI_NAMES={
 function updateAI(data){
 
   if(!data){
-
     return;
-
   }
 
 
@@ -1598,9 +3513,7 @@ function updateAI(data){
 
 
       if(!row){
-
         return;
-
       }
 
 
@@ -1613,9 +3526,7 @@ function updateAI(data){
 
 
       if(!item){
-
         return;
-
       }
 
 
@@ -1678,16 +3589,10 @@ function updateAI(data){
 }
 
 
-/* =========================================================
-   CONSENSUS
-========================================================= */
-
 function updateConsensus(data){
 
   if(!data){
-
     return;
-
   }
 
 
@@ -1739,16 +3644,10 @@ function updateConsensus(data){
 }
 
 
-/* =========================================================
-   FINAL DECISION
-========================================================= */
-
 function updateFinalDecision(data){
 
   if(!data){
-
     return;
-
   }
 
 
@@ -1815,16 +3714,10 @@ function updateFinalDecision(data){
 }
 
 
-/* =========================================================
-   SAFETY
-========================================================= */
-
 function updateSafety(data){
 
   if(!data){
-
     return;
-
   }
 
 
@@ -1874,16 +3767,10 @@ function updateSafety(data){
 }
 
 
-/* =========================================================
-   NEWS
-========================================================= */
-
 function updateNews(data){
 
   if(!data){
-
     return;
-
   }
 
 
@@ -1929,10 +3816,6 @@ function updateNews(data){
 
 }
 
-
-/* =========================================================
-   NEWS EVENTS
-========================================================= */
 
 function renderNewsEvents(events){
 
@@ -2003,16 +3886,10 @@ function renderNewsEvents(events){
 }
 
 
-/* =========================================================
-   PRE NEWS
-========================================================= */
-
 function updatePreNews(data){
 
   if(!data){
-
     return;
-
   }
 
 
@@ -2033,16 +3910,10 @@ function updatePreNews(data){
 }
 
 
-/* =========================================================
-   NEWS VERIFICATION
-========================================================= */
-
 function updateNewsVerification(data){
 
   if(!data){
-
     return;
-
   }
 
 
@@ -2062,10 +3933,6 @@ function updateNewsVerification(data){
 }
 
 
-/* =========================================================
-   REGIME
-========================================================= */
-
 function updateRegime(value){
 
   if(value){
@@ -2078,19 +3945,10 @@ function updateRegime(value){
 }
 
 
-/* =========================================================
-   ACTION CLASS
-========================================================= */
-
-function setActionClass(
-  element,
-  action
-){
+function setActionClass(element,action){
 
   if(!element){
-
     return;
-
   }
 
 
@@ -2129,19 +3987,10 @@ function setActionClass(
 }
 
 
-/* =========================================================
-   RSI COLOR
-========================================================= */
-
-function colorNumber(
-  element,
-  value
-){
+function colorNumber(element,value){
 
   if(!element){
-
     return;
-
   }
 
 
@@ -2157,9 +4006,7 @@ function colorNumber(
 
 
   if(!Number.isFinite(n)){
-
     return;
-
   }
 
 
@@ -2191,9 +4038,7 @@ function drawChart(){
 
 
   if(!canvas){
-
     return;
-
   }
 
 
@@ -2233,9 +4078,7 @@ function drawChart(){
 
 
   if(!ctx){
-
     return;
-
   }
 
 
@@ -2268,8 +4111,6 @@ function drawChart(){
     height
   );
 
-
-  /* Grid */
 
   ctx.strokeStyle =
     "rgba(100,120,150,.12)";
@@ -2366,9 +4207,7 @@ function drawChart(){
 
 
   if(points.length < 2){
-
     return;
-
   }
 
 
@@ -2574,10 +4413,6 @@ function createPaperTrade(){
 }
 
 
-/* =========================================================
-   POSITIONS
-========================================================= */
-
 function renderPositions(){
 
   if(!state.paperPositions.length){
@@ -2635,19 +4470,14 @@ function renderPositions(){
    LOG
 ========================================================= */
 
-function log(
-  message,
-  level="info"
-){
+function log(message,level="info"){
 
   const box =
     $("logBox");
 
 
   if(!box){
-
     return;
-
   }
 
 
@@ -2700,9 +4530,7 @@ function formatCountdown(value){
 
 
   if(!Number.isFinite(n)){
-
     return "--";
-
   }
 
 
@@ -2741,16 +4569,12 @@ function formatMinutes(value){
 
 
   if(!Number.isFinite(n)){
-
     return "--";
-
   }
 
 
   if(n <= 0){
-
     return "RELEASED";
-
   }
 
 
@@ -2763,7 +4587,7 @@ function formatMinutes(value){
 
 
 /* =========================================================
-   DATA WATCHDOG
+   WATCHDOG
 ========================================================= */
 
 setInterval(()=>{
@@ -2772,9 +4596,7 @@ setInterval(()=>{
     !state.loggedIn ||
     !state.lastDashboardUpdate
   ){
-
     return;
-
   }
 
 
@@ -2829,7 +4651,6 @@ setInterval(()=>{
 
 /* =========================================================
    GLOBAL ERROR HANDLER
-   This makes hidden JS crashes visible in Event Log.
 ========================================================= */
 
 window.addEventListener(
@@ -2871,4 +4692,7 @@ window.addEventListener(
   }
 );
 
-  </script>
+</script>
+
+</body>
+   </html>
