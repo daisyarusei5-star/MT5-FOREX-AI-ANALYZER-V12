@@ -1,611 +1,1289 @@
-'use strict';
+"use strict";
 
-const express = require('express');
-const http = require('http');
-const path = require('path');
-const crypto = require('crypto');
-const WebSocket = require('ws');
+/*
+=========================================================
+🔥 MT5 FOREX AI ANALYZER V12
+POWERED BY ELISY ANALYSIS DEVELOPER
+
+Backend: Express + WebSocket
+Frontend: public/index.html
+
+IMPORTANT:
+- This server does NOT automatically place live MT5 trades.
+- MT5 data must be supplied by the MT5 EA/bridge.
+- AI predictions are analysis only.
+=========================================================
+*/
+
+const express = require("express");
+const http = require("http");
+const path = require("path");
+const crypto = require("crypto");
+const WebSocket = require("ws");
 
 const app = express();
 const server = http.createServer(app);
-
-const PORT = Number(process.env.PORT) || 10000;
-const PUBLIC_DIR = path.join(__dirname, 'public');
-const INDEX_FILE = path.join(PUBLIC_DIR, 'index.html');
-
 const wss = new WebSocket.Server({
   server,
-  path: '/ws'
+  path: "/ws"
 });
 
-// ============================================================
-// CONFIG
-// ============================================================
+
+/* =========================================================
+   CONFIG
+========================================================= */
+
+const PORT = Number(process.env.PORT || 10000);
+
+const FRONTEND_VERSION = "12.0.2";
+const SERVER_VERSION = "12.0.2";
 
 const BOT_PASSWORD =
-  process.env.BOT_PASSWORD || 'change-this-password';
+  process.env.BOT_PASSWORD || "CHANGE_THIS_PASSWORD";
 
 const MT5_BRIDGE_SECRET =
-  process.env.MT5_BRIDGE_SECRET || 'change-this-secret';
-
-const AI_MODELS = {
-  openai:
-    process.env.OPENAI_MODEL || 'gpt-5.6-luna',
-
-  deepseek:
-    process.env.DEEPSEEK_MODEL || 'deepseek-v4-flash',
-
-  gemini:
-    process.env.GEMINI_MODEL || 'gemini-2.5-flash',
-
-  groq:
-    process.env.GROQ_MODEL || 'openai/gpt-oss-20b',
-
-  openrouter:
-    process.env.OPENROUTER_MODEL || 'openrouter/free',
-
-  mistral:
-    process.env.MISTRAL_MODEL || 'mistral-large-latest'
-};
-
-const API_KEYS = {
-  openai:
-    process.env.OPENAI_API_KEY || '',
-
-  deepseek:
-    process.env.DEEPSEEK_API_KEY || '',
-
-  gemini:
-    process.env.GEMINI_API_KEY || '',
-
-  groq:
-    process.env.GROQ_API_KEY || '',
-
-  openrouter:
-    process.env.OPENROUTER_API_KEY || '',
-
-  mistral:
-    process.env.MISTRAL_API_KEY || ''
-};
+  process.env.MT5_BRIDGE_SECRET || "";
 
 const MAX_CANDLES =
-  Number(process.env.MAX_CANDLES) || 500;
+  Number(process.env.MAX_CANDLES || 500);
 
 const STALE_DATA_MS =
-  Number(process.env.STALE_DATA_MS) || 15000;
-
-const MAX_SPREAD_POINTS =
-  Number(process.env.MAX_SPREAD_POINTS) || 50;
+  Number(process.env.STALE_DATA_MS || 15000);
 
 const AI_REFRESH_MS =
-  Number(process.env.AI_REFRESH_MS) || 60000;
+  Number(process.env.AI_REFRESH_MS || 60000);
 
-// ============================================================
-// EXPRESS
-// ============================================================
+const MAX_SPREAD_POINTS =
+  Number(process.env.MAX_SPREAD_POINTS || 50);
 
-app.disable('x-powered-by');
+const MAX_DAILY_LOSS_PERCENT =
+  Number(process.env.MAX_DAILY_LOSS_PERCENT || 5);
+
+const MAX_POSITIONS =
+  Number(process.env.MAX_POSITIONS || 3);
+
+const COOLDOWN_SECONDS =
+  Number(process.env.COOLDOWN_SECONDS || 60);
+
+
+/* =========================================================
+   AI CONFIG
+========================================================= */
+
+const AI_CONFIG = {
+
+  openai: {
+    key: process.env.OPENAI_API_KEY || "",
+    model:
+      process.env.OPENAI_MODEL ||
+      "gpt-4o-mini"
+  },
+
+  deepseek: {
+    key: process.env.DEEPSEEK_API_KEY || "",
+    model:
+      process.env.DEEPSEEK_MODEL ||
+      "deepseek-chat"
+  },
+
+  gemini: {
+    key: process.env.GEMINI_API_KEY || "",
+    model:
+      process.env.GEMINI_MODEL ||
+      "gemini-2.5-flash"
+  },
+
+  groq: {
+    key: process.env.GROQ_API_KEY || "",
+    model:
+      process.env.GROQ_MODEL ||
+      "openai/gpt-oss-20b"
+  },
+
+  openrouter: {
+    key: process.env.OPENROUTER_API_KEY || "",
+    model:
+      process.env.OPENROUTER_MODEL ||
+      "openrouter/free"
+  },
+
+  mistral: {
+    key: process.env.MISTRAL_API_KEY || "",
+    model:
+      process.env.MISTRAL_MODEL ||
+      "mistral-large-latest"
+  }
+
+};
+
+
+/* =========================================================
+   EXPRESS
+========================================================= */
+
+app.disable("x-powered-by");
 
 app.use(
   express.json({
-    limit: '2mb'
+    limit: "2mb"
   })
 );
 
 app.use(
   express.urlencoded({
     extended: false,
-    limit: '1mb'
+    limit: "1mb"
   })
 );
 
-// Security headers
+
+/* =========================================================
+   SECURITY HEADERS
+========================================================= */
+
 app.use((req, res, next) => {
+
   res.setHeader(
-    'X-Content-Type-Options',
-    'nosniff'
+    "X-Content-Type-Options",
+    "nosniff"
   );
 
   res.setHeader(
-    'X-Frame-Options',
-    'SAMEORIGIN'
+    "X-Frame-Options",
+    "SAMEORIGIN"
   );
 
   res.setHeader(
-    'Referrer-Policy',
-    'strict-origin-when-cross-origin'
+    "Referrer-Policy",
+    "strict-origin-when-cross-origin"
+  );
+
+  res.setHeader(
+    "Permissions-Policy",
+    "geolocation=(), microphone=(), camera=()"
   );
 
   next();
+
 });
 
-// ============================================================
-// GLOBAL STATE
-// ============================================================
 
-function emptyAnalyst(name) {
-  return {
-    provider: name,
-    status: 'WAITING',
-    action: 'WAIT',
-    confidence: 0,
-    reason: 'AI analysis has not started.',
-    model: null,
-    latency: null,
-    error: null,
-    timestamp: null
-  };
-}
+/* =========================================================
+   STATIC FILES
+========================================================= */
+
+const PUBLIC_DIR =
+  path.join(__dirname, "public");
+
+const INDEX_FILE =
+  path.join(PUBLIC_DIR, "index.html");
+
+
+app.use(
+  express.static(PUBLIC_DIR, {
+    index: false,
+
+    etag: false,
+
+    maxAge: 0,
+
+    setHeaders: (res, filePath) => {
+
+      if(
+        filePath.endsWith("index.html")
+      ){
+
+        res.setHeader(
+          "Cache-Control",
+          "no-store, no-cache, must-revalidate, proxy-revalidate"
+        );
+
+        res.setHeader(
+          "Pragma",
+          "no-cache"
+        );
+
+        res.setHeader(
+          "Expires",
+          "0"
+        );
+
+      }
+
+    }
+
+  })
+);
+
+
+/* =========================================================
+   STATE
+========================================================= */
 
 const state = {
-  connected: false,
 
-  symbol: 'XAUUSD',
+  mt5: {
 
-  timeframe: 'M5',
+    connected: false,
 
-  mode: 'ANALYSIS ONLY',
+    online: false,
 
-  price: null,
+    symbol: "EURUSD",
 
-  bid: null,
+    timeframe: "M1",
 
-  ask: null,
+    price: null,
 
-  spread: null,
+    bid: null,
 
-  tickTime: null,
+    ask: null,
 
-  candles: [],
+    spread: null,
+
+    spreadPoints: null,
+
+    tick: null,
+
+    timestamp: null,
+
+    candles: []
+
+  },
 
   technical: {
+
     rsi: null,
+
     ema20: null,
+
     ema50: null,
+
     ema200: null,
+
     atr: null,
+
     momentum: null,
-    trend: 'WAITING',
+
+    trend: "WAIT",
+
+    candleStructure: "WAIT",
+
     support: null,
+
     resistance: null,
-    candleStructure: 'WAITING'
+
+    decision: "WAIT",
+
+    regime: "WAIT"
+
   },
 
-  news: {
-    event: 'NO LIVE NEWS DATA',
-    currency: 'USD',
-    impact: 'UNKNOWN',
-    actual: null,
-    forecast: null,
-    previous: null,
-    releaseTime: null,
-    status: 'WAITING'
-  },
+  ai: {},
 
-  ai: {
-    running: false,
-    lastRun: null,
+  consensus: {
 
-    analysts: {
-      openai: emptyAnalyst('OpenAI'),
-      deepseek: emptyAnalyst('DeepSeek'),
-      gemini: emptyAnalyst('Gemini'),
-      groq: emptyAnalyst('Groq'),
-      openrouter: emptyAnalyst('OpenRouter'),
-      mistral: emptyAnalyst('Mistral AI')
-    },
+    buy: 0,
 
-    consensus: {
-      action: 'WAIT',
-      confidence: 0,
-      agreement: 0,
-      buy: 0,
-      sell: 0,
-      wait: 100,
-      activeAnalysts: 0,
-      totalAnalysts: 6,
-      reason: 'Waiting for AI analysis.'
-    }
-  },
+    sell: 0,
 
-  forecast: {
-    direction: 'WAIT',
-    confidence: 0,
-    reason: 'Waiting for AI analysis.'
-  },
+    wait: 100,
 
-  decision: {
-    action: 'WAIT',
-    confidence: 0,
     agreement: 0,
+
+    technicalConfirmation: "WAIT"
+
+  },
+
+  finalDecision: {
+
+    action: "WAIT",
+
+    confidence: 0,
+
+    reason:
+      "Waiting for real MT5 data and AI confirmation.",
+
     entry: null,
-    stopLoss: null,
-    takeProfit: null,
-    reason: 'Waiting for live market data.'
+
+    sl: null,
+
+    tp: null
+
   },
 
   safety: {
-    safe: false,
-    spreadOK: false,
-    staleData: true,
-    newsRisk: false,
-    riskOK: true,
-    message: 'Waiting for MT5 connection.'
+
+    spreadStatus: "WAITING",
+
+    dailyLoss: "0%",
+
+    maxPositions: String(MAX_POSITIONS),
+
+    cooldown: "READY",
+
+    newsRisk: "UNKNOWN",
+
+    dataStatus: "WAITING"
+
   },
 
-  positions: [],
+  news: {
 
-  lastUpdate: null,
+    mode: "MONITOR",
 
-  clients: new Set()
+    countdown: null,
+
+    minutesUntil: null,
+
+    events: []
+
+  },
+
+  preNews: {
+
+    forecast:
+      "Waiting for news event data."
+
+  },
+
+  newsVerification: {
+
+    result:
+      "Waiting for released news."
+
+  },
+
+  lastMT5Update: 0,
+
+  lastAIUpdate: 0,
+
+  lastActionTime: 0
+
 };
 
-// ============================================================
-// HELPERS
-// ============================================================
 
-function safeNumber(value) {
-  const n = Number(value);
+/* =========================================================
+   LOGIN SESSIONS
+========================================================= */
+
+const sessions = new Map();
+
+const SESSION_TTL =
+  24 * 60 * 60 * 1000;
+
+
+function createSession(){
+
+  const token =
+    crypto.randomBytes(32).toString("hex");
+
+  sessions.set(
+    token,
+    Date.now()
+  );
+
+  return token;
+
+}
+
+
+function isValidSession(token){
+
+  if(!token){
+    return false;
+  }
+
+  const created =
+    sessions.get(token);
+
+  if(!created){
+    return false;
+  }
+
+  if(
+    Date.now() - created >
+    SESSION_TTL
+  ){
+
+    sessions.delete(token);
+
+    return false;
+
+  }
+
+  return true;
+
+}
+
+
+function getTokenFromRequest(req){
+
+  const auth =
+    req.headers.authorization || "";
+
+  if(
+    auth.startsWith("Bearer ")
+  ){
+
+    return auth.slice(7).trim();
+
+  }
+
+  const cookie =
+    req.headers.cookie || "";
+
+  const match =
+    cookie.match(
+      /mt5_session=([^;]+)/
+    );
+
+  return match
+    ? decodeURIComponent(match[1])
+    : "";
+
+}
+
+
+/* =========================================================
+   LOGIN
+========================================================= */
+
+app.post(
+  "/api/login",
+  (req, res) => {
+
+    const password =
+      String(
+        req.body?.password || ""
+      );
+
+    if(
+      !BOT_PASSWORD ||
+      BOT_PASSWORD ===
+      "CHANGE_THIS_PASSWORD"
+    ){
+
+      return res.status(503).json({
+
+        success: false,
+
+        ok: false,
+
+        message:
+          "BOT_PASSWORD is not configured on the server."
+
+      });
+
+    }
+
+
+    if(password !== BOT_PASSWORD){
+
+      return res.status(401).json({
+
+        success: false,
+
+        ok: false,
+
+        message:
+          "Invalid bot password."
+
+      });
+
+    }
+
+
+    const token =
+      createSession();
+
+
+    res.setHeader(
+      "Set-Cookie",
+      [
+        "mt5_session=" +
+        encodeURIComponent(token),
+
+        "Path=/",
+
+        "HttpOnly",
+
+        "SameSite=Lax",
+
+        "Max-Age=" +
+        Math.floor(
+          SESSION_TTL / 1000
+        )
+      ].join("; ")
+    );
+
+
+    return res.json({
+
+      success: true,
+
+      ok: true,
+
+      token,
+
+      message:
+        "Login successful."
+
+    });
+
+  }
+);
+
+
+/* =========================================================
+   AUTH MIDDLEWARE
+========================================================= */
+
+function requireAuth(req, res, next){
+
+  const token =
+    getTokenFromRequest(req);
+
+  if(!isValidSession(token)){
+
+    return res.status(401).json({
+
+      success: false,
+
+      message:
+        "Authentication required."
+
+    });
+
+  }
+
+  req.sessionToken = token;
+
+  next();
+
+}
+
+
+/* =========================================================
+   PUBLIC HEALTH
+========================================================= */
+
+app.get(
+  "/health",
+  (req, res) => {
+
+    res.json({
+
+      ok: true,
+
+      service:
+        "MT5 FOREX AI ANALYZER V12",
+
+      frontend:
+        FRONTEND_VERSION,
+
+      server:
+        SERVER_VERSION,
+
+      time:
+        new Date().toISOString(),
+
+      mt5Online:
+        state.mt5.online,
+
+      aiProviders:
+        Object.keys(AI_CONFIG)
+
+    });
+
+  }
+);
+
+
+/* =========================================================
+   VERSION
+========================================================= */
+
+app.get(
+  "/api/version",
+  (req, res) => {
+
+    res.json({
+
+      success: true,
+
+      frontend:
+        FRONTEND_VERSION,
+
+      server:
+        SERVER_VERSION
+
+    });
+
+  }
+);
+
+
+/* =========================================================
+   DASHBOARD
+========================================================= */
+
+app.get(
+  "/api/dashboard",
+  requireAuth,
+  (req, res) => {
+
+    refreshSafety();
+
+    res.setHeader(
+      "Cache-Control",
+      "no-store"
+    );
+
+    res.json(
+      buildDashboard()
+    );
+
+  }
+);
+
+
+/* =========================================================
+   AI STATUS
+========================================================= */
+
+app.get(
+  "/api/ai/status",
+  requireAuth,
+  (req, res) => {
+
+    res.json({
+
+      success: true,
+
+      providers:
+        Object.keys(AI_CONFIG)
+          .map(name => {
+
+            return {
+
+              provider: name,
+
+              configured:
+                Boolean(
+                  AI_CONFIG[name].key
+                ),
+
+              status:
+                state.ai[name]?.status ||
+                (
+                  AI_CONFIG[name].key
+                    ? "READY"
+                    : "NOT_CONFIGURED"
+                )
+
+            };
+
+          }),
+
+      lastUpdate:
+        state.lastAIUpdate
+
+    });
+
+  }
+);
+
+
+/* =========================================================
+   AI MANUAL SCAN
+========================================================= */
+
+app.post(
+  "/api/ai/scan",
+  requireAuth,
+  async (req, res) => {
+
+    try{
+
+      const result =
+        await runAIConsensus();
+
+      res.json({
+
+        success: true,
+
+        result
+
+      });
+
+    }catch(error){
+
+      console.error(
+        "AI scan error:",
+        error
+      );
+
+      res.status(500).json({
+
+        success: false,
+
+        message:
+          "AI scan failed."
+
+      });
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   MT5 PUSH
+========================================================= */
+
+app.post(
+  "/api/mt5/push",
+  (req, res) => {
+
+    if(
+      MT5_BRIDGE_SECRET
+    ){
+
+      const provided =
+        String(
+          req.headers["x-mt5-secret"] ||
+          ""
+        );
+
+      if(
+        provided !==
+        MT5_BRIDGE_SECRET
+      ){
+
+        return res.status(401).json({
+
+          success: false,
+
+          message:
+            "Invalid MT5 bridge secret."
+
+        });
+
+      }
+
+    }
+
+
+    try{
+
+      const data =
+        normalizeMT5Payload(
+          req.body
+        );
+
+
+      updateMT5State(data);
+
+
+      broadcast({
+
+        type: "mt5",
+
+        data:
+          state.mt5
+
+      });
+
+
+      refreshAnalysis();
+
+
+      broadcastDashboard();
+
+
+      return res.json({
+
+        success: true,
+
+        message:
+          "MT5 data accepted.",
+
+        symbol:
+          state.mt5.symbol,
+
+        timeframe:
+          state.mt5.timeframe,
+
+        candles:
+          state.mt5.candles.length
+
+      });
+
+    }catch(error){
+
+      console.error(
+        "MT5 push error:",
+        error
+      );
+
+      return res.status(400).json({
+
+        success: false,
+
+        message:
+          error.message ||
+          "Invalid MT5 payload."
+
+      });
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   ROOT PAGE
+========================================================= */
+
+app.get(
+  "/",
+  (req, res) => {
+
+    res.setHeader(
+      "Cache-Control",
+      "no-store, no-cache, must-revalidate, proxy-revalidate"
+    );
+
+    res.setHeader(
+      "Pragma",
+      "no-cache"
+    );
+
+    res.setHeader(
+      "Expires",
+      "0"
+    );
+
+    res.sendFile(
+      INDEX_FILE
+    );
+
+  }
+);
+
+
+/* =========================================================
+   SPA FALLBACK
+========================================================= */
+
+app.use(
+  (req, res, next) => {
+
+    if(
+      req.method === "GET" &&
+      !req.path.startsWith("/api/") &&
+      req.path !== "/health"
+    ){
+
+      return res.sendFile(
+        INDEX_FILE
+      );
+
+    }
+
+    next();
+
+  }
+);
+
+
+/* =========================================================
+   API 404
+========================================================= */
+
+app.use(
+  "/api",
+  (req, res) => {
+
+    res.status(404).json({
+
+      success: false,
+
+      message:
+        "API endpoint not found."
+
+    });
+
+  }
+);
+
+
+/* =========================================================
+   ERROR HANDLER
+========================================================= */
+
+app.use(
+  (error, req, res, next) => {
+
+    console.error(
+      "SERVER ERROR:",
+      error
+    );
+
+
+    if(res.headersSent){
+
+      return next(error);
+
+    }
+
+
+    res.status(500).json({
+
+      success: false,
+
+      message:
+        "Internal server error."
+
+    });
+
+  }
+);
+
+
+/* =========================================================
+   MT5 NORMALIZATION
+========================================================= */
+
+function normalizeMT5Payload(body){
+
+  if(
+    !body ||
+    typeof body !== "object"
+  ){
+
+    throw new Error(
+      "MT5 payload must be an object."
+    );
+
+  }
+
+
+  const source =
+    body.data &&
+    typeof body.data === "object"
+      ? body.data
+      : body;
+
+
+  const candles =
+    source.candles ||
+    source.rates ||
+    source.ohlc ||
+    [];
+
+
+  let normalizedCandles=[];
+
+
+  if(Array.isArray(candles)){
+
+    normalizedCandles =
+      candles
+        .map(c => {
+
+          if(
+            !c ||
+            typeof c !== "object"
+          ){
+
+            return null;
+
+          }
+
+
+          return {
+
+            time:
+              c.time ??
+              c.Time ??
+              c.timestamp ??
+              null,
+
+            open:
+              numberOrNull(
+                c.open ??
+                c.Open
+              ),
+
+            high:
+              numberOrNull(
+                c.high ??
+                c.High
+              ),
+
+            low:
+              numberOrNull(
+                c.low ??
+                c.Low
+              ),
+
+            close:
+              numberOrNull(
+                c.close ??
+                c.Close ??
+                c.price
+              ),
+
+            volume:
+              numberOrNull(
+                c.volume ??
+                c.Volume ??
+                0
+              )
+
+          };
+
+        })
+        .filter(Boolean)
+        .filter(
+          c =>
+            Number.isFinite(c.close)
+        )
+        .slice(-MAX_CANDLES);
+
+  }
+
+
+  return {
+
+    symbol:
+      String(
+        source.symbol ||
+        source.Symbol ||
+        state.mt5.symbol ||
+        "EURUSD"
+      ),
+
+    timeframe:
+      String(
+        source.timeframe ||
+        source.Timeframe ||
+        state.mt5.timeframe ||
+        "M1"
+      ),
+
+    price:
+      numberOrNull(
+        source.price ??
+        source.last ??
+        source.Last ??
+        source.bid ??
+        source.Bid
+      ),
+
+    bid:
+      numberOrNull(
+        source.bid ??
+        source.Bid
+      ),
+
+    ask:
+      numberOrNull(
+        source.ask ??
+        source.Ask
+      ),
+
+    spread:
+      numberOrNull(
+        source.spread ??
+        source.spreadPoints
+      ),
+
+    spreadPoints:
+      numberOrNull(
+        source.spreadPoints ??
+        source.spread
+      ),
+
+    tick:
+      source.tick ??
+      source.tickValue ??
+      source.timestamp ??
+      Date.now(),
+
+    timestamp:
+      source.timestamp ??
+      source.time ??
+      source.serverTime ??
+      Date.now(),
+
+    connected:
+      source.connected === true ||
+      source.online === true ||
+      source.status === "online",
+
+    candles:
+      normalizedCandles
+
+  };
+
+}
+
+
+function numberOrNull(value){
+
+  const n =
+    Number(value);
 
   return Number.isFinite(n)
     ? n
     : null;
+
 }
 
-function round(value, digits = 2) {
-  const n = Number(value);
 
-  if (!Number.isFinite(n)) {
-    return null;
+/* =========================================================
+   UPDATE MT5 STATE
+========================================================= */
+
+function updateMT5State(data){
+
+  state.mt5.symbol =
+    data.symbol;
+
+  state.mt5.timeframe =
+    data.timeframe;
+
+
+  if(data.price !== null){
+
+    state.mt5.price =
+      data.price;
+
   }
 
-  return Number(
-    n.toFixed(digits)
-  );
+
+  if(data.bid !== null){
+
+    state.mt5.bid =
+      data.bid;
+
+  }
+
+
+  if(data.ask !== null){
+
+    state.mt5.ask =
+      data.ask;
+
+  }
+
+
+  if(data.spread !== null){
+
+    state.mt5.spread =
+      data.spread;
+
+  }
+
+
+  if(
+    data.spreadPoints !== null
+  ){
+
+    state.mt5.spreadPoints =
+      data.spreadPoints;
+
+  }
+
+
+  state.mt5.tick =
+    data.tick;
+
+
+  state.mt5.timestamp =
+    data.timestamp;
+
+
+  state.mt5.candles =
+    data.candles.length
+      ? data.candles
+      : state.mt5.candles;
+
+
+  state.mt5.connected =
+    data.connected !== false;
+
+  state.mt5.online =
+    true;
+
+
+  state.lastMT5Update =
+    Date.now();
+
 }
 
-function clamp(value, min, max) {
-  return Math.max(
-    min,
-    Math.min(max, value)
-  );
-}
 
-function nowISO() {
-  return new Date().toISOString();
-}
+/* =========================================================
+   TECHNICAL ENGINE
+========================================================= */
 
-function constantTimeEqual(a, b) {
-  const aa = Buffer.from(
-    String(a || '')
-  );
+function refreshAnalysis(){
 
-  const bb = Buffer.from(
-    String(b || '')
-  );
-
-  if (aa.length !== bb.length) {
-    return false;
-  }
-
-  return crypto.timingSafeEqual(
-    aa,
-    bb
-  );
-}
-
-function send(ws, payload) {
-  if (
-    ws &&
-    ws.readyState === WebSocket.OPEN
-  ) {
-    try {
-      ws.send(
-        JSON.stringify(payload)
-      );
-    } catch (error) {
-      console.error(
-        'WS SEND ERROR:',
-        error.message
-      );
-    }
-  }
-}
-
-function broadcast(payload) {
-  const message =
-    JSON.stringify(payload);
-
-  for (
-    const ws of state.clients
-  ) {
-    if (
-      ws.readyState ===
-      WebSocket.OPEN
-    ) {
-      try {
-        ws.send(message);
-      } catch (_) {}
-    }
-  }
-}
-
-function publicState() {
-  return {
-    connected:
-      state.connected,
-
-    symbol:
-      state.symbol,
-
-    timeframe:
-      state.timeframe,
-
-    mode:
-      state.mode,
-
-    price:
-      state.price,
-
-    bid:
-      state.bid,
-
-    ask:
-      state.ask,
-
-    spread:
-      state.spread,
-
-    tickTime:
-      state.tickTime,
-
-    candles:
-      state.candles.slice(-MAX_CANDLES),
-
-    technical:
-      state.technical,
-
-    news:
-      state.news,
-
-    ai:
-      state.ai,
-
-    forecast:
-      state.forecast,
-
-    decision:
-      state.decision,
-
-    safety:
-      state.safety,
-
-    positions:
-      state.positions,
-
-    lastUpdate:
-      state.lastUpdate
-  };
-}
-
-// ============================================================
-// TECHNICAL ENGINE
-// ============================================================
-
-function calculateEMA(values, period) {
-  if (
-    !Array.isArray(values) ||
-    values.length < period
-  ) {
-    return null;
-  }
-
-  const multiplier =
-    2 / (period + 1);
-
-  let ema =
-    values
-      .slice(0, period)
-      .reduce(
-        (a, b) => a + b,
-        0
-      ) / period;
-
-  for (
-    let i = period;
-    i < values.length;
-    i++
-  ) {
-    ema =
-      (
-        (values[i] - ema) *
-        multiplier
-      ) + ema;
-  }
-
-  return ema;
-}
-
-function calculateRSI(
-  values,
-  period = 14
-) {
-  if (
-    !Array.isArray(values) ||
-    values.length <= period
-  ) {
-    return null;
-  }
-
-  let gains = 0;
-  let losses = 0;
-
-  for (
-    let i = 1;
-    i <= period;
-    i++
-  ) {
-    const diff =
-      values[i] -
-      values[i - 1];
-
-    if (diff >= 0) {
-      gains += diff;
-    } else {
-      losses += Math.abs(diff);
-    }
-  }
-
-  let averageGain =
-    gains / period;
-
-  let averageLoss =
-    losses / period;
-
-  for (
-    let i = period + 1;
-    i < values.length;
-    i++
-  ) {
-    const diff =
-      values[i] -
-      values[i - 1];
-
-    const gain =
-      Math.max(diff, 0);
-
-    const loss =
-      Math.max(-diff, 0);
-
-    averageGain =
-      (
-        averageGain *
-        (period - 1) +
-        gain
-      ) / period;
-
-    averageLoss =
-      (
-        averageLoss *
-        (period - 1) +
-        loss
-      ) / period;
-  }
-
-  if (averageLoss === 0) {
-    return 100;
-  }
-
-  const rs =
-    averageGain /
-    averageLoss;
-
-  return 100 - 100 / (1 + rs);
-}
-
-function calculateATR(
-  candles,
-  period = 14
-) {
-  if (
-    !Array.isArray(candles) ||
-    candles.length <= period
-  ) {
-    return null;
-  }
-
-  const ranges = [];
-
-  for (
-    let i = 1;
-    i < candles.length;
-    i++
-  ) {
-    const current =
-      candles[i];
-
-    const previous =
-      candles[i - 1];
-
-    const high =
-      safeNumber(current.high);
-
-    const low =
-      safeNumber(current.low);
-
-    const previousClose =
-      safeNumber(previous.close);
-
-    if (
-      high === null ||
-      low === null ||
-      previousClose === null
-    ) {
-      continue;
-    }
-
-    ranges.push(
-      Math.max(
-        high - low,
-        Math.abs(
-          high - previousClose
-        ),
-        Math.abs(
-          low - previousClose
-        )
-      )
-    );
-  }
-
-  if (
-    ranges.length < period
-  ) {
-    return null;
-  }
-
-  let atr =
-    ranges
-      .slice(0, period)
-      .reduce(
-        (a, b) => a + b,
-        0
-      ) / period;
-
-  for (
-    let i = period;
-    i < ranges.length;
-    i++
-  ) {
-    atr =
-      (
-        atr * (period - 1) +
-        ranges[i]
-      ) / period;
-  }
-
-  return atr;
-}
-
-function calculateTechnicalAnalysis() {
   const candles =
-    state.candles;
+    state.mt5.candles;
 
-  if (candles.length < 20) {
+
+  if(
+    !Array.isArray(candles) ||
+    candles.length < 2
+  ){
+
+    state.technical = {
+
+      ...state.technical,
+
+      decision: "WAIT",
+
+      trend: "WAIT",
+
+      regime: "WAIT"
+
+    };
+
+    refreshSafety();
+
     return;
+
   }
+
 
   const closes =
     candles
       .map(c =>
-        safeNumber(c.close)
+        Number(c.close)
       )
-      .filter(
-        v => v !== null
-      );
+      .filter(Number.isFinite);
 
-  if (closes.length < 20) {
-    return;
-  }
+
+  const highs =
+    candles
+      .map(c =>
+        Number(c.high)
+      )
+      .filter(Number.isFinite);
+
+
+  const lows =
+    candles
+      .map(c =>
+        Number(c.low)
+      )
+      .filter(Number.isFinite);
+
 
   const ema20 =
     calculateEMA(
@@ -613,11 +1291,13 @@ function calculateTechnicalAnalysis() {
       20
     );
 
+
   const ema50 =
     calculateEMA(
       closes,
       50
     );
+
 
   const ema200 =
     calculateEMA(
@@ -625,11 +1305,13 @@ function calculateTechnicalAnalysis() {
       200
     );
 
+
   const rsi =
     calculateRSI(
       closes,
       14
     );
+
 
   const atr =
     calculateATR(
@@ -637,2472 +1319,2707 @@ function calculateTechnicalAnalysis() {
       14
     );
 
-  const last =
-    closes[closes.length - 1];
 
-  const previous =
-    closes[closes.length - 2];
+  const momentum =
+    calculateMomentum(
+      closes
+    );
 
-  let momentum = null;
 
-  if (
-    previous !== 0
-  ) {
-    momentum =
-      (
-        (last - previous) /
-        previous
-      ) * 100;
-  }
+  const trend =
+    determineTrend(
+      closes,
+      ema20,
+      ema50,
+      ema200
+    );
 
-  let trend =
-    'NEUTRAL';
-
-  if (
-    ema20 !== null &&
-    ema50 !== null
-  ) {
-    if (
-      last > ema20 &&
-      ema20 > ema50
-    ) {
-      trend = 'BULLISH';
-    } else if (
-      last < ema20 &&
-      ema20 < ema50
-    ) {
-      trend = 'BEARISH';
-    }
-  }
-
-  const recent =
-    candles.slice(-50);
-
-  const highs =
-    recent
-      .map(c =>
-        safeNumber(c.high)
-      )
-      .filter(
-        v => v !== null
-      );
-
-  const lows =
-    recent
-      .map(c =>
-        safeNumber(c.low)
-      )
-      .filter(
-        v => v !== null
-      );
-
-  const resistance =
-    highs.length
-      ? Math.max(...highs)
-      : null;
 
   const support =
     lows.length
-      ? Math.min(...lows)
+      ? Math.min(
+          ...lows.slice(-50)
+        )
       : null;
 
-  const lastCandle =
-    candles[candles.length - 1];
 
-  let candleStructure =
-    'NEUTRAL';
+  const resistance =
+    highs.length
+      ? Math.max(
+          ...highs.slice(-50)
+        )
+      : null;
 
-  if (lastCandle) {
-    const open =
-      safeNumber(lastCandle.open);
 
-    const high =
-      safeNumber(lastCandle.high);
+  const candleStructure =
+    determineCandleStructure(
+      candles
+    );
 
-    const low =
-      safeNumber(lastCandle.low);
 
-    const close =
-      safeNumber(lastCandle.close);
+  const technicalDecision =
+    determineTechnicalDecision({
 
-    if (
-      open !== null &&
-      high !== null &&
-      low !== null &&
-      close !== null
-    ) {
-      const body =
-        Math.abs(close - open);
+      price:
+        state.mt5.price,
 
-      const range =
-        high - low;
+      rsi,
 
-      if (range > 0) {
-        if (
-          body / range >
-          0.65
-        ) {
-          candleStructure =
-            close > open
-              ? 'STRONG BULLISH'
-              : 'STRONG BEARISH';
-        } else {
-          candleStructure =
-            'MIXED';
-        }
-      }
-    }
-  }
+      ema20,
+
+      ema50,
+
+      ema200,
+
+      momentum,
+
+      trend
+
+    });
+
+
+  const regime =
+    determineRegime({
+
+      trend,
+
+      momentum,
+
+      rsi
+
+    });
+
 
   state.technical = {
-    rsi:
-      round(rsi, 2),
 
-    ema20:
-      round(ema20, 5),
+    rsi,
 
-    ema50:
-      round(ema50, 5),
+    ema20,
 
-    ema200:
-      round(ema200, 5),
+    ema50,
 
-    atr:
-      round(atr, 5),
+    ema200,
 
-    momentum:
-      round(momentum, 4),
+    atr,
+
+    momentum,
 
     trend,
 
-    support:
-      round(support, 5),
+    candleStructure,
 
-    resistance:
-      round(resistance, 5),
+    support,
 
-    candleStructure
+    resistance,
+
+    decision:
+      technicalDecision,
+
+    regime
+
   };
+
+
+  refreshSafety();
+
 }
 
-// ============================================================
-// TECHNICAL DECISION
-// ============================================================
 
-function runTechnicalDecision() {
-  if (
-    state.price === null ||
-    state.candles.length < 20
-  ) {
-    return;
+/* =========================================================
+   EMA
+========================================================= */
+
+function calculateEMA(values, period){
+
+  if(!values.length){
+    return null;
   }
 
-  const t =
-    state.technical;
 
-  let buy = 0;
-  let sell = 0;
+  const usable =
+    values.slice(
+      -Math.max(
+        values.length,
+        period
+      )
+    );
 
-  if (t.rsi !== null) {
-    if (
-      t.rsi >= 55 &&
-      t.rsi <= 70
-    ) {
-      buy += 20;
+
+  const multiplier =
+    2 / (period + 1);
+
+
+  let ema =
+    usable[0];
+
+
+  for(
+    let i=1;
+    i<usable.length;
+    i++
+  ){
+
+    ema =
+      (
+        usable[i] -
+        ema
+      ) *
+      multiplier +
+      ema;
+
+  }
+
+
+  return roundNumber(ema);
+
+}
+
+
+/* =========================================================
+   RSI
+========================================================= */
+
+function calculateRSI(values, period){
+
+  if(
+    values.length <
+    period + 1
+  ){
+
+    return null;
+
+  }
+
+
+  const slice =
+    values.slice(
+      -(period + 1)
+    );
+
+
+  let gains=0;
+  let losses=0;
+
+
+  for(
+    let i=1;
+    i<slice.length;
+    i++
+  ){
+
+    const diff =
+      slice[i] -
+      slice[i-1];
+
+
+    if(diff > 0){
+
+      gains += diff;
+
+    }else{
+
+      losses +=
+        Math.abs(diff);
+
     }
 
-    if (
-      t.rsi <= 45 &&
-      t.rsi >= 30
-    ) {
-      sell += 20;
+  }
+
+
+  if(losses === 0){
+    return 100;
+  }
+
+
+  const rs =
+    gains / losses;
+
+
+  return roundNumber(
+    100 -
+    (
+      100 /
+      (1 + rs)
+    )
+  );
+
+}
+
+
+/* =========================================================
+   ATR
+========================================================= */
+
+function calculateATR(candles, period){
+
+  if(
+    candles.length <
+    period + 1
+  ){
+
+    return null;
+
+  }
+
+
+  const trs=[];
+
+
+  for(
+    let i=1;
+    i<candles.length;
+    i++
+  ){
+
+    const current =
+      candles[i];
+
+    const previous =
+      candles[i-1];
+
+
+    const high =
+      Number(current.high);
+
+    const low =
+      Number(current.low);
+
+    const previousClose =
+      Number(previous.close);
+
+
+    if(
+      !Number.isFinite(high) ||
+      !Number.isFinite(low) ||
+      !Number.isFinite(previousClose)
+    ){
+
+      continue;
+
     }
+
+
+    const tr =
+      Math.max(
+
+        high - low,
+
+        Math.abs(
+          high -
+          previousClose
+        ),
+
+        Math.abs(
+          low -
+          previousClose
+        )
+
+      );
+
+
+    trs.push(tr);
+
   }
 
-  if (
-    t.ema20 !== null &&
-    t.ema50 !== null
-  ) {
-    if (
-      state.price > t.ema20 &&
-      t.ema20 > t.ema50
-    ) {
-      buy += 25;
+
+  if(!trs.length){
+    return null;
+  }
+
+
+  const recent =
+    trs.slice(-period);
+
+
+  return roundNumber(
+    recent.reduce(
+      (a,b) => a+b,
+      0
+    ) /
+    recent.length
+  );
+
+}
+
+
+/* =========================================================
+   MOMENTUM
+========================================================= */
+
+function calculateMomentum(values){
+
+  if(values.length < 6){
+    return "NEUTRAL";
+  }
+
+
+  const current =
+    values[values.length - 1];
+
+
+  const previous =
+    values[values.length - 6];
+
+
+  const difference =
+    current - previous;
+
+
+  if(difference > 0){
+    return "BULLISH";
+  }
+
+
+  if(difference < 0){
+    return "BEARISH";
+  }
+
+
+  return "NEUTRAL";
+
+}
+
+
+/* =========================================================
+   TREND
+========================================================= */
+
+function determineTrend(
+  closes,
+  ema20,
+  ema50,
+  ema200
+){
+
+  if(
+    !Number.isFinite(
+      closes.at(-1)
+    )
+  ){
+
+    return "WAIT";
+
+  }
+
+
+  const price =
+    closes.at(-1);
+
+
+  if(
+    Number.isFinite(ema20) &&
+    Number.isFinite(ema50) &&
+    Number.isFinite(ema200)
+  ){
+
+    if(
+      price > ema20 &&
+      ema20 > ema50 &&
+      ema50 > ema200
+    ){
+
+      return "BULLISH";
+
     }
 
-    if (
-      state.price < t.ema20 &&
-      t.ema20 < t.ema50
-    ) {
-      sell += 25;
-    }
-  }
 
-  if (t.momentum !== null) {
-    if (t.momentum > 0) {
-      buy += 15;
+    if(
+      price < ema20 &&
+      ema20 < ema50 &&
+      ema50 < ema200
+    ){
+
+      return "BEARISH";
+
     }
 
-    if (t.momentum < 0) {
-      sell += 15;
+  }
+
+
+  if(
+    Number.isFinite(ema20)
+  ){
+
+    if(price > ema20){
+      return "BULLISH";
     }
+
+    if(price < ema20){
+      return "BEARISH";
+    }
+
   }
 
-  if (
-    t.candleStructure ===
-    'STRONG BULLISH'
-  ) {
-    buy += 20;
+
+  return "NEUTRAL";
+
+}
+
+
+/* =========================================================
+   CANDLE STRUCTURE
+========================================================= */
+
+function determineCandleStructure(candles){
+
+  if(
+    !candles.length
+  ){
+
+    return "WAIT";
+
   }
 
-  if (
-    t.candleStructure ===
-    'STRONG BEARISH'
-  ) {
-    sell += 20;
+
+  const c =
+    candles.at(-1);
+
+
+  const open =
+    Number(c.open);
+
+  const high =
+    Number(c.high);
+
+  const low =
+    Number(c.low);
+
+  const close =
+    Number(c.close);
+
+
+  if(
+    ![
+      open,
+      high,
+      low,
+      close
+    ].every(
+      Number.isFinite
+    )
+  ){
+
+    return "WAIT";
+
   }
 
-  if (t.trend === 'BULLISH') {
-    buy += 20;
+
+  const body =
+    Math.abs(
+      close - open
+    );
+
+
+  const upper =
+    high -
+    Math.max(
+      open,
+      close
+    );
+
+
+  const lower =
+    Math.min(
+      open,
+      close
+    ) -
+    low;
+
+
+  if(
+    lower > body * 2 &&
+    upper < body
+  ){
+
+    return "BULLISH REJECTION";
+
   }
 
-  if (t.trend === 'BEARISH') {
-    sell += 20;
+
+  if(
+    upper > body * 2 &&
+    lower < body
+  ){
+
+    return "BEARISH REJECTION";
+
   }
 
-  const total =
-    buy + sell;
 
-  if (total <= 0) {
-    state.decision = {
-      ...state.decision,
-      action: 'WAIT',
-      confidence: 0,
+  if(close > open){
+    return "BULLISH";
+  }
+
+
+  if(close < open){
+    return "BEARISH";
+  }
+
+
+  return "DOJI";
+
+}
+
+
+/* =========================================================
+   TECHNICAL DECISION
+========================================================= */
+
+function determineTechnicalDecision(data){
+
+  const {
+    price,
+    rsi,
+    ema20,
+    ema50,
+    ema200,
+    momentum,
+    trend
+  } = data;
+
+
+  if(
+    !Number.isFinite(price)
+  ){
+
+    return "WAIT";
+
+  }
+
+
+  let buyScore=0;
+  let sellScore=0;
+
+
+  if(trend === "BULLISH"){
+    buyScore += 2;
+  }
+
+
+  if(trend === "BEARISH"){
+    sellScore += 2;
+  }
+
+
+  if(momentum === "BULLISH"){
+    buyScore += 1;
+  }
+
+
+  if(momentum === "BEARISH"){
+    sellScore += 1;
+  }
+
+
+  if(
+    Number.isFinite(rsi)
+  ){
+
+    if(
+      rsi > 50 &&
+      rsi < 70
+    ){
+
+      buyScore += 1;
+
+    }
+
+
+    if(
+      rsi < 50 &&
+      rsi > 30
+    ){
+
+      sellScore += 1;
+
+    }
+
+  }
+
+
+  if(
+    Number.isFinite(ema20) &&
+    price > ema20
+  ){
+
+    buyScore += 1;
+
+  }
+
+
+  if(
+    Number.isFinite(ema20) &&
+    price < ema20
+  ){
+
+    sellScore += 1;
+
+  }
+
+
+  if(
+    buyScore >= 4 &&
+    buyScore > sellScore
+  ){
+
+    return "BUY";
+
+  }
+
+
+  if(
+    sellScore >= 4 &&
+    sellScore > buyScore
+  ){
+
+    return "SELL";
+
+  }
+
+
+  return "WAIT";
+
+}
+
+
+/* =========================================================
+   MARKET REGIME
+========================================================= */
+
+function determineRegime(data){
+
+  if(
+    data.trend === "BULLISH" &&
+    data.momentum === "BULLISH"
+  ){
+
+    return "TRENDING BULLISH";
+
+  }
+
+
+  if(
+    data.trend === "BEARISH" &&
+    data.momentum === "BEARISH"
+  ){
+
+    return "TRENDING BEARISH";
+
+  }
+
+
+  if(
+    data.rsi !== null &&
+    (
+      data.rsi >= 70 ||
+      data.rsi <= 30
+    )
+  ){
+
+    return "EXTENDED";
+
+  }
+
+
+  return "RANGING / MIXED";
+
+}
+
+
+/* =========================================================
+   SAFETY
+========================================================= */
+
+function refreshSafety(){
+
+  const stale =
+    !state.lastMT5Update ||
+    Date.now() -
+    state.lastMT5Update >
+    STALE_DATA_MS;
+
+
+  let spreadStatus =
+    "WAITING";
+
+
+  const spread =
+    state.mt5.spreadPoints ??
+    state.mt5.spread;
+
+
+  if(
+    Number.isFinite(spread)
+  ){
+
+    spreadStatus =
+      spread <= MAX_SPREAD_POINTS
+        ? "SAFE"
+        : "HIGH SPREAD";
+
+  }
+
+
+  state.safety = {
+
+    spreadStatus,
+
+    dailyLoss:
+      "0%",
+
+    maxPositions:
+      String(MAX_POSITIONS),
+
+    cooldown:
+      cooldownRemaining(),
+
+    newsRisk:
+      state.newsRisk ||
+      "UNKNOWN",
+
+    dataStatus:
+      stale
+        ? "STALE"
+        : state.lastMT5Update
+          ? "LIVE"
+          : "WAITING"
+
+  };
+
+}
+
+
+function cooldownRemaining(){
+
+  if(!state.lastActionTime){
+
+    return "READY";
+
+  }
+
+
+  const elapsed =
+    (
+      Date.now() -
+      state.lastActionTime
+    ) / 1000;
+
+
+  const remaining =
+    COOLDOWN_SECONDS -
+    elapsed;
+
+
+  if(remaining <= 0){
+
+    return "READY";
+
+  }
+
+
+  return (
+    Math.ceil(
+      remaining
+    ) +
+    "s"
+  );
+
+}
+
+
+/* =========================================================
+   FINAL DECISION
+========================================================= */
+
+function buildFinalDecision(){
+
+  const technical =
+    state.technical.decision;
+
+
+  const consensus =
+    state.consensus;
+
+
+  const stale =
+    state.safety.dataStatus !== "LIVE";
+
+
+  if(stale){
+
+    return {
+
+      action:"WAIT",
+
+      confidence:0,
+
       reason:
-        'Technical signals are insufficient.'
+        "MT5 data is stale or unavailable.",
+
+      entry:null,
+
+      sl:null,
+
+      tp:null
+
     };
 
-    return;
   }
 
-  const buyPct =
-    Math.round(
-      buy / total * 100
-    );
 
-  const sellPct =
-    Math.round(
-      sell / total * 100
-    );
+  if(
+    state.safety.spreadStatus ===
+    "HIGH SPREAD"
+  ){
 
-  let action = 'WAIT';
+    return {
 
-  if (
-    Math.max(
-      buyPct,
-      sellPct
-    ) >= 65
-  ) {
-    action =
-      buyPct > sellPct
-        ? 'BUY'
-        : 'SELL';
+      action:"WAIT",
+
+      confidence:0,
+
+      reason:
+        "Spread safety filter blocked the setup.",
+
+      entry:null,
+
+      sl:null,
+
+      tp:null
+
+    };
+
   }
 
-  let stopLoss = null;
-  let takeProfit = null;
 
-  if (
-    t.atr !== null &&
-    state.price !== null
-  ) {
-    if (action === 'BUY') {
-      stopLoss =
-        state.price -
-        t.atr * 1.5;
+  const buy =
+    Number(
+      consensus.buy
+    ) || 0;
 
-      takeProfit =
-        state.price +
-        t.atr * 3;
-    }
 
-    if (action === 'SELL') {
-      stopLoss =
-        state.price +
-        t.atr * 1.5;
+  const sell =
+    Number(
+      consensus.sell
+    ) || 0;
 
-      takeProfit =
-        state.price -
-        t.atr * 3;
-    }
+
+  const agreement =
+    Number(
+      consensus.agreement
+    ) || 0;
+
+
+  let action =
+    "WAIT";
+
+
+  if(
+    technical === "BUY" &&
+    buy > sell &&
+    agreement >= 50
+  ){
+
+    action="BUY";
+
   }
 
-  state.decision = {
-    ...state.decision,
 
-    action,
+  if(
+    technical === "SELL" &&
+    sell > buy &&
+    agreement >= 50
+  ){
 
-    confidence:
-      Math.max(
-        buyPct,
-        sellPct
-      ),
+    action="SELL";
 
-    entry:
-      round(
-        state.price,
-        5
-      ),
-
-    stopLoss:
-      round(
-        stopLoss,
-        5
-      ),
-
-    takeProfit:
-      round(
-        takeProfit,
-        5
-      ),
-
-    reason:
-      action === 'BUY'
-        ? 'Technical conditions favor BUY.'
-        : action === 'SELL'
-          ? 'Technical conditions favor SELL.'
-          : 'Technical signals are not sufficiently aligned.'
-  };
-}
-
-// ============================================================
-// AI PROMPT
-// ============================================================
-
-function buildAIPrompt() {
-  const t =
-    state.technical;
-
-  return `
-You are one analyst inside MT5 FOREX AI ANALYZER V12.
-
-This system provides market analysis only.
-Do not guarantee profit.
-Do not claim certainty.
-Do not invent missing market or news data.
-
-Analyze the supplied snapshot.
-
-MARKET
-Symbol: ${state.symbol}
-Timeframe: ${state.timeframe}
-Price: ${state.price}
-Bid: ${state.bid}
-Ask: ${state.ask}
-Spread: ${state.spread}
-
-TECHNICAL
-RSI(14): ${t.rsi}
-EMA20: ${t.ema20}
-EMA50: ${t.ema50}
-EMA200: ${t.ema200}
-ATR(14): ${t.atr}
-Momentum: ${t.momentum}
-Trend: ${t.trend}
-Support: ${t.support}
-Resistance: ${t.resistance}
-Candle Structure: ${t.candleStructure}
-
-NEWS
-Event: ${state.news.event}
-Currency: ${state.news.currency}
-Impact: ${state.news.impact}
-Actual: ${state.news.actual}
-Forecast: ${state.news.forecast}
-Previous: ${state.news.previous}
-Release Time: ${state.news.releaseTime}
-Status: ${state.news.status}
-
-RECENT CANDLES
-${JSON.stringify(
-  state.candles.slice(-30)
-)}
-
-Return ONLY valid JSON:
-
-{
-  "action": "BUY",
-  "confidence": 0,
-  "reason": "short explanation"
-}
-
-Action must be BUY, SELL, or WAIT.
-Confidence must be an integer from 0 to 100.
-
-If evidence is mixed or insufficient, return WAIT.
-`;
-}
-
-// ============================================================
-// JSON EXTRACTION
-// ============================================================
-
-function extractJSON(text) {
-  if (!text) {
-    throw new Error(
-      'Empty AI response'
-    );
   }
 
-  const cleaned =
-    String(text)
-      .trim()
-      .replace(/^```json/i, '')
-      .replace(/^```/i, '')
-      .replace(/```$/i, '')
-      .trim();
-
-  try {
-    return JSON.parse(cleaned);
-  } catch (_) {
-    const start =
-      cleaned.indexOf('{');
-
-    const end =
-      cleaned.lastIndexOf('}');
-
-    if (
-      start !== -1 &&
-      end > start
-    ) {
-      return JSON.parse(
-        cleaned.slice(
-          start,
-          end + 1
-        )
-      );
-    }
-
-    throw new Error(
-      'AI returned invalid JSON'
-    );
-  }
-}
-
-function normalizeAIResult(
-  provider,
-  model,
-  raw,
-  latency
-) {
-  const parsed =
-    extractJSON(raw);
-
-  const actionText =
-    String(
-      parsed.action || 'WAIT'
-    ).toUpperCase();
-
-  const action =
-    ['BUY', 'SELL', 'WAIT']
-      .includes(actionText)
-      ? actionText
-      : 'WAIT';
 
   const confidence =
-    clamp(
-      Math.round(
-        safeNumber(
-          parsed.confidence
-        ) || 0
-      ),
-      0,
-      100
-    );
+    action === "WAIT"
+      ? Math.round(
+          Math.max(
+            buy,
+            sell
+          )
+        )
+      : Math.round(
+          (
+            Math.max(
+              buy,
+              sell
+            ) * 0.65
+          ) +
+          (
+            agreement * 0.35
+          )
+        );
+
+
+  let reason =
+    "Waiting for technical and AI confirmation.";
+
+
+  if(action === "BUY"){
+
+    reason =
+      "AI consensus and technical engine support BUY.";
+
+  }
+
+
+  if(action === "SELL"){
+
+    reason =
+      "AI consensus and technical engine support SELL.";
+
+  }
+
+
+  const price =
+    state.mt5.price;
+
+
+  const atr =
+    state.technical.atr;
+
+
+  let sl=null;
+  let tp=null;
+
+
+  if(
+    action !== "WAIT" &&
+    Number.isFinite(price) &&
+    Number.isFinite(atr) &&
+    atr > 0
+  ){
+
+    if(action === "BUY"){
+
+      sl =
+        roundPrice(
+          price - atr * 1.5
+        );
+
+      tp =
+        roundPrice(
+          price + atr * 3
+        );
+
+    }else{
+
+      sl =
+        roundPrice(
+          price + atr * 1.5
+        );
+
+      tp =
+        roundPrice(
+          price - atr * 3
+        );
+
+    }
+
+  }
+
 
   return {
-    provider,
-
-    status: 'ONLINE',
 
     action,
 
     confidence,
 
-    reason:
-      String(
-        parsed.reason ||
-        'No reason supplied.'
-      ).slice(0, 500),
+    reason,
 
-    model,
+    entry:
+      Number.isFinite(price)
+        ? roundPrice(price)
+        : null,
 
-    latency,
+    sl,
 
-    error: null,
+    tp
 
-    timestamp:
-      nowISO()
   };
+
 }
 
-// ============================================================
-// FETCH WITH TIMEOUT
-// ============================================================
 
-async function fetchWithTimeout(
-  url,
-  options = {},
-  timeout = 30000
-) {
+/* =========================================================
+   DASHBOARD
+========================================================= */
+
+function buildDashboard(){
+
+  const finalDecision =
+    buildFinalDecision();
+
+
+  state.finalDecision =
+    finalDecision;
+
+
+  return {
+
+    success:true,
+
+    version:
+      SERVER_VERSION,
+
+    mt5: {
+
+      ...state.mt5
+
+    },
+
+    technical: {
+
+      ...state.technical
+
+    },
+
+    ai: {
+
+      ...state.ai
+
+    },
+
+    consensus: {
+
+      ...state.consensus,
+
+      technicalConfirmation:
+        state.technical.decision
+
+    },
+
+    finalDecision: {
+
+      ...finalDecision
+
+    },
+
+    safety: {
+
+      ...state.safety
+
+    },
+
+    news: {
+
+      ...state.news
+
+    },
+
+    preNews: {
+
+      ...state.preNews
+
+    },
+
+    newsVerification: {
+
+      ...state.newsVerification
+
+    },
+
+    marketRegime:
+      state.technical.regime,
+
+    timestamp:
+      Date.now()
+
+  };
+
+}
+
+
+/* =========================================================
+   AI PROMPT
+========================================================= */
+
+function buildAIPrompt(){
+
+  const technical =
+    state.technical;
+
+
+  const market =
+    state.mt5;
+
+
+  return `
+You are one analyst inside an MT5 forex market analysis system.
+
+Do NOT place trades.
+Do NOT claim certainty.
+Return ONLY JSON.
+
+Market:
+Symbol: ${market.symbol}
+Timeframe: ${market.timeframe}
+Price: ${market.price}
+
+Technical:
+RSI14: ${technical.rsi}
+EMA20: ${technical.ema20}
+EMA50: ${technical.ema50}
+EMA200: ${technical.ema200}
+ATR14: ${technical.atr}
+Momentum: ${technical.momentum}
+Trend: ${technical.trend}
+Candle: ${technical.candleStructure}
+Support: ${technical.support}
+Resistance: ${technical.resistance}
+
+Return exactly:
+
+{
+  "action": "BUY|SELL|WAIT",
+  "confidence": 0,
+  "reason": "short explanation"
+}
+
+Confidence must be between 0 and 100.
+`.trim();
+
+}
+
+
+/* =========================================================
+   AI CONSENSUS
+========================================================= */
+
+async function runAIConsensus(){
+
+  const prompt =
+    buildAIPrompt();
+
+
+  const providers =
+    Object.keys(AI_CONFIG);
+
+
+  const tasks =
+    providers.map(
+      provider =>
+        callAIProvider(
+          provider,
+          prompt
+        )
+    );
+
+
+  const results =
+    await Promise.all(
+      tasks
+    );
+
+
+  const ai={};
+
+
+  results.forEach(result => {
+
+    ai[result.provider] =
+      result;
+
+  });
+
+
+  state.ai=ai;
+
+  state.lastAIUpdate =
+    Date.now();
+
+
+  calculateConsensus();
+
+
+  broadcast({
+
+    type:"ai",
+
+    data:
+      state.ai
+
+  });
+
+
+  broadcast({
+
+    type:"dashboard",
+
+    data:
+      buildDashboard()
+
+  });
+
+
+  return {
+
+    ai:
+      state.ai,
+
+    consensus:
+      state.consensus,
+
+    finalDecision:
+      state.finalDecision
+
+  };
+
+}
+
+
+/* =========================================================
+   PROVIDER DISPATCH
+========================================================= */
+
+async function callAIProvider(
+  provider,
+  prompt
+){
+
+  const config =
+    AI_CONFIG[provider];
+
+
+  if(!config.key){
+
+    return {
+
+      provider,
+
+      status:
+        "NOT_CONFIGURED",
+
+      action:"WAIT",
+
+      confidence:0,
+
+      reason:
+        "API key not configured."
+
+    };
+
+  }
+
+
+  try{
+
+    let result;
+
+
+    if(provider === "openai"){
+
+      result =
+        await callOpenAI(
+          config,
+          prompt
+        );
+
+    }else if(provider === "deepseek"){
+
+      result =
+        await callDeepSeek(
+          config,
+          prompt
+        );
+
+    }else if(provider === "gemini"){
+
+      result =
+        await callGemini(
+          config,
+          prompt
+        );
+
+    }else if(provider === "groq"){
+
+      result =
+        await callGroq(
+          config,
+          prompt
+        );
+
+    }else if(provider === "openrouter"){
+
+      result =
+        await callOpenRouter(
+          config,
+          prompt
+        );
+
+    }else if(provider === "mistral"){
+
+      result =
+        await callMistral(
+          config,
+          prompt
+        );
+
+    }else{
+
+      throw new Error(
+        "Unknown AI provider."
+      );
+
+    }
+
+
+    const normalized =
+      normalizeAIResult(
+        result
+      );
+
+
+    return {
+
+      provider,
+
+      status:"ONLINE",
+
+      ...normalized
+
+    };
+
+  }catch(error){
+
+    console.error(
+      provider +
+      " AI error:",
+      error.message
+    );
+
+
+    return {
+
+      provider,
+
+      status:"ERROR",
+
+      action:"WAIT",
+
+      confidence:0,
+
+      reason:
+        error.message ||
+        "AI provider error."
+
+    };
+
+  }
+
+}
+
+
+/* =========================================================
+   GENERIC CHAT API
+========================================================= */
+
+async function callChatAPI(
+  config,
+  prompt,
+  baseURL,
+  headers={}
+){
+
   const controller =
     new AbortController();
 
+
   const timer =
     setTimeout(
-      () => controller.abort(),
-      timeout
-    );
-
-  try {
-    return await fetch(
-      url,
-      {
-        ...options,
-        signal:
-          controller.signal
-      }
-    );
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
-// ============================================================
-// OPENAI COMPATIBLE
-// ============================================================
-
-async function callOpenAICompatible({
-  provider,
-  apiKey,
-  baseURL,
-  model,
-  prompt
-}) {
-  if (!apiKey) {
-    throw new Error(
-      `${provider} API key is not configured.`
-    );
-  }
-
-  const started =
-    Date.now();
-
-  const response =
-    await fetchWithTimeout(
-      `${baseURL}/chat/completions`,
-      {
-        method: 'POST',
-
-        headers: {
-          'Content-Type':
-            'application/json',
-
-          Authorization:
-            `Bearer ${apiKey}`
-        },
-
-        body:
-          JSON.stringify({
-            model,
-
-            messages: [
-              {
-                role: 'system',
-                content:
-                  'You are a disciplined financial-market analyst. Return only valid JSON.'
-              },
-              {
-                role: 'user',
-                content: prompt
-              }
-            ],
-
-            temperature: 0.1,
-
-            max_tokens: 300
-          })
-      },
+      () =>
+        controller.abort(),
       30000
     );
 
-  const latency =
-    Date.now() - started;
 
-  const text =
-    await response.text();
+  try{
 
-  if (!response.ok) {
-    throw new Error(
-      `${provider} HTTP ${response.status}: ${text.slice(0, 300)}`
+    const response =
+      await fetch(
+        baseURL,
+        {
+
+          method:"POST",
+
+          headers:{
+
+            "Content-Type":
+              "application/json",
+
+            ...headers
+
+          },
+
+          body:
+            JSON.stringify({
+
+              model:
+                config.model,
+
+              messages:[
+
+                {
+
+                  role:"system",
+
+                  content:
+                    "Return valid JSON only."
+
+                },
+
+                {
+
+                  role:"user",
+
+                  content:
+                    prompt
+
+                }
+
+              ],
+
+              temperature:0.1
+
+            }),
+
+          signal:
+            controller.signal
+
+        }
+      );
+
+
+    const text =
+      await response.text();
+
+
+    if(!response.ok){
+
+      throw new Error(
+        "HTTP " +
+        response.status +
+        ": " +
+        text.slice(0,300)
+      );
+
+    }
+
+
+    let json={};
+
+
+    try{
+
+      json =
+        JSON.parse(text);
+
+    }catch(error){
+
+      throw new Error(
+        "Invalid provider JSON response."
+      );
+
+    }
+
+
+    return extractChatContent(
+      json
     );
+
+  }finally{
+
+    clearTimeout(timer);
+
   }
 
-  let data;
+}
 
-  try {
-    data = JSON.parse(text);
-  } catch (_) {
-    throw new Error(
-      `${provider} returned invalid API JSON.`
+
+/* =========================================================
+   OPENAI
+========================================================= */
+
+async function callOpenAI(
+  config,
+  prompt
+){
+
+  return callChatAPI(
+
+    config,
+
+    prompt,
+
+    "https://api.openai.com/v1/chat/completions",
+
+    {
+
+      Authorization:
+        "Bearer " +
+        config.key
+
+    }
+
+  );
+
+}
+
+
+/* =========================================================
+   DEEPSEEK
+========================================================= */
+
+async function callDeepSeek(
+  config,
+  prompt
+){
+
+  return callChatAPI(
+
+    config,
+
+    prompt,
+
+    "https://api.deepseek.com/chat/completions",
+
+    {
+
+      Authorization:
+        "Bearer " +
+        config.key
+
+    }
+
+  );
+
+}
+
+
+/* =========================================================
+   GROQ
+========================================================= */
+
+async function callGroq(
+  config,
+  prompt
+){
+
+  return callChatAPI(
+
+    config,
+
+    prompt,
+
+    "https://api.groq.com/openai/v1/chat/completions",
+
+    {
+
+      Authorization:
+        "Bearer " +
+        config.key
+
+    }
+
+  );
+
+}
+
+
+/* =========================================================
+   OPENROUTER
+========================================================= */
+
+async function callOpenRouter(
+  config,
+  prompt
+){
+
+  return callChatAPI(
+
+    config,
+
+    prompt,
+
+    "https://openrouter.ai/api/v1/chat/completions",
+
+    {
+
+      Authorization:
+        "Bearer " +
+        config.key,
+
+      "HTTP-Referer":
+        process.env.APP_URL ||
+        "http://localhost:10000",
+
+      "X-Title":
+        "MT5 FOREX AI ANALYZER V12"
+
+    }
+
+  );
+
+}
+
+
+/* =========================================================
+   MISTRAL
+========================================================= */
+
+async function callMistral(
+  config,
+  prompt
+){
+
+  return callChatAPI(
+
+    config,
+
+    prompt,
+
+    "https://api.mistral.ai/v1/chat/completions",
+
+    {
+
+      Authorization:
+        "Bearer " +
+        config.key
+
+    }
+
+  );
+
+}
+
+
+/* =========================================================
+   GEMINI
+========================================================= */
+
+async function callGemini(
+  config,
+  prompt
+){
+
+  const controller =
+    new AbortController();
+
+
+  const timer =
+    setTimeout(
+      () =>
+        controller.abort(),
+      30000
     );
+
+
+  try{
+
+    const url =
+      "https://generativelanguage.googleapis.com/v1beta/models/" +
+      encodeURIComponent(
+        config.model
+      ) +
+      ":generateContent?key=" +
+      encodeURIComponent(
+        config.key
+      );
+
+
+    const response =
+      await fetch(
+        url,
+        {
+
+          method:"POST",
+
+          headers:{
+            "Content-Type":
+              "application/json"
+          },
+
+          body:
+            JSON.stringify({
+
+              contents:[
+
+                {
+
+                  parts:[
+
+                    {
+
+                      text:
+                        prompt
+
+                    }
+
+                  ]
+
+                }
+
+              ],
+
+              generationConfig:{
+
+                temperature:0.1,
+
+                responseMimeType:
+                  "application/json"
+
+              }
+
+            }),
+
+          signal:
+            controller.signal
+
+        }
+      );
+
+
+    const text =
+      await response.text();
+
+
+    if(!response.ok){
+
+      throw new Error(
+        "HTTP " +
+        response.status +
+        ": " +
+        text.slice(0,300)
+      );
+
+    }
+
+
+    const json =
+      JSON.parse(text);
+
+
+    return (
+      json
+        ?.candidates?.[0]
+        ?.content?.parts?.[0]
+        ?.text ||
+      ""
+    );
+
+  }finally{
+
+    clearTimeout(timer);
+
   }
+
+}
+
+
+/* =========================================================
+   EXTRACT CHAT CONTENT
+========================================================= */
+
+function extractChatContent(json){
 
   const content =
-    data?.choices?.[0]
+    json
+      ?.choices?.[0]
       ?.message?.content;
 
-  if (!content) {
-    throw new Error(
-      `${provider} returned no content.`
-    );
+
+  if(typeof content === "string"){
+
+    return content;
+
   }
 
-  return normalizeAIResult(
-    provider,
-    model,
-    content,
-    latency
-  );
-}
 
-// ============================================================
-// OPENAI
-// ============================================================
+  if(Array.isArray(content)){
 
-async function callOpenAI(prompt) {
-  if (!API_KEYS.openai) {
-    throw new Error(
-      'OpenAI API key is not configured.'
-    );
-  }
-
-  const started =
-    Date.now();
-
-  const response =
-    await fetchWithTimeout(
-      'https://api.openai.com/v1/responses',
-      {
-        method: 'POST',
-
-        headers: {
-          'Content-Type':
-            'application/json',
-
-          Authorization:
-            `Bearer ${API_KEYS.openai}`
-        },
-
-        body:
-          JSON.stringify({
-            model:
-              AI_MODELS.openai,
-
-            input: [
-              {
-                role: 'system',
-                content:
-                  'You are a disciplined financial-market analyst. Return only valid JSON.'
-              },
-
-              {
-                role: 'user',
-                content: prompt
-              }
-            ],
-
-            max_output_tokens: 300
-          })
-      },
-      30000
-    );
-
-  const latency =
-    Date.now() - started;
-
-  const text =
-    await response.text();
-
-  if (!response.ok) {
-    throw new Error(
-      `OpenAI HTTP ${response.status}: ${text.slice(0, 300)}`
-    );
-  }
-
-  let data;
-
-  try {
-    data = JSON.parse(text);
-  } catch (_) {
-    throw new Error(
-      'OpenAI returned invalid API JSON.'
-    );
-  }
-
-  let content =
-    data.output_text || '';
-
-  if (!content && Array.isArray(data.output)) {
-    content =
-      data.output
-        .flatMap(
-          item =>
-            Array.isArray(item.content)
-              ? item.content
-              : []
-        )
-        .map(
-          item =>
-            item.text || ''
-        )
-        .join('');
-  }
-
-  if (!content) {
-    throw new Error(
-      'OpenAI returned no text.'
-    );
-  }
-
-  return normalizeAIResult(
-    'OpenAI',
-    AI_MODELS.openai,
-    content,
-    latency
-  );
-}
-
-// ============================================================
-// GEMINI
-// ============================================================
-
-async function callGemini(prompt) {
-  if (!API_KEYS.gemini) {
-    throw new Error(
-      'Gemini API key is not configured.'
-    );
-  }
-
-  const started =
-    Date.now();
-
-  const url =
-    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
-      AI_MODELS.gemini
-    )}:generateContent?key=${encodeURIComponent(
-      API_KEYS.gemini
-    )}`;
-
-  const response =
-    await fetchWithTimeout(
-      url,
-      {
-        method: 'POST',
-
-        headers: {
-          'Content-Type':
-            'application/json'
-        },
-
-        body:
-          JSON.stringify({
-            systemInstruction: {
-              parts: [
-                {
-                  text:
-                    'You are a disciplined financial-market analyst. Return only valid JSON.'
-                }
-              ]
-            },
-
-            contents: [
-              {
-                role: 'user',
-
-                parts: [
-                  {
-                    text: prompt
-                  }
-                ]
-              }
-            ],
-
-            generationConfig: {
-              temperature: 0.1,
-              maxOutputTokens: 300,
-              responseMimeType:
-                'application/json'
-            }
-          })
-      },
-      30000
-    );
-
-  const latency =
-    Date.now() - started;
-
-  const text =
-    await response.text();
-
-  if (!response.ok) {
-    throw new Error(
-      `Gemini HTTP ${response.status}: ${text.slice(0, 300)}`
-    );
-  }
-
-  let data;
-
-  try {
-    data = JSON.parse(text);
-  } catch (_) {
-    throw new Error(
-      'Gemini returned invalid API JSON.'
-    );
-  }
-
-  const content =
-    data?.candidates?.[0]
-      ?.content?.parts
-      ?.map(
-        part => part.text || ''
+    return content
+      .map(part =>
+        part?.text || ""
       )
-      ?.join('');
+      .join("");
 
-  if (!content) {
-    throw new Error(
-      'Gemini returned no text.'
-    );
   }
 
-  return normalizeAIResult(
-    'Gemini',
-    AI_MODELS.gemini,
-    content,
-    latency
+
+  return JSON.stringify(
+    json
   );
+
 }
 
-// ============================================================
-// SIX PROVIDERS
-// ============================================================
 
-async function callDeepSeek(prompt) {
-  return callOpenAICompatible({
-    provider: 'DeepSeek',
-    apiKey: API_KEYS.deepseek,
-    baseURL:
-      'https://api.deepseek.com',
-    model:
-      AI_MODELS.deepseek,
-    prompt
-  });
-}
+/* =========================================================
+   NORMALIZE AI
+========================================================= */
 
-async function callGroq(prompt) {
-  return callOpenAICompatible({
-    provider: 'Groq',
-    apiKey: API_KEYS.groq,
-    baseURL:
-      'https://api.groq.com/openai/v1',
-    model:
-      AI_MODELS.groq,
-    prompt
-  });
-}
+function normalizeAIResult(raw){
 
-async function callOpenRouter(prompt) {
-  return callOpenAICompatible({
-    provider: 'OpenRouter',
-    apiKey: API_KEYS.openrouter,
-    baseURL:
-      'https://openrouter.ai/api/v1',
-    model:
-      AI_MODELS.openrouter,
-    prompt
-  });
-}
+  let value =
+    raw;
 
-async function callMistral(prompt) {
-  return callOpenAICompatible({
-    provider: 'Mistral AI',
-    apiKey: API_KEYS.mistral,
-    baseURL:
-      'https://api.mistral.ai/v1',
-    model:
-      AI_MODELS.mistral,
-    prompt
-  });
-}
 
-// ============================================================
-// SAFE ANALYST
-// ============================================================
+  if(typeof raw === "string"){
 
-async function runOneAnalyst(
-  key,
-  functionCall
-) {
-  const names = {
-    openai: 'OpenAI',
-    deepseek: 'DeepSeek',
-    gemini: 'Gemini',
-    groq: 'Groq',
-    openrouter: 'OpenRouter',
-    mistral: 'Mistral AI'
+    value =
+      raw
+        .trim()
+        .replace(
+          /^```json/i,
+          ""
+        )
+        .replace(
+          /^```/i,
+          ""
+        )
+        .replace(
+          /```$/i,
+          ""
+        )
+        .trim();
+
+
+    try{
+
+      value =
+        JSON.parse(value);
+
+    }catch(error){
+
+      const match =
+        value.match(
+          /\{[\s\S]*\}/
+        );
+
+
+      if(match){
+
+        try{
+
+          value =
+            JSON.parse(
+              match[0]
+            );
+
+        }catch(error2){
+
+          value={};
+
+        }
+
+      }else{
+
+        value={};
+
+      }
+
+    }
+
+  }
+
+
+  const action =
+    String(
+      value?.action ||
+      value?.decision ||
+      value?.signal ||
+      "WAIT"
+    ).toUpperCase();
+
+
+  const safeAction =
+    [
+      "BUY",
+      "SELL",
+      "WAIT"
+    ].includes(action)
+      ? action
+      : "WAIT";
+
+
+  let confidence =
+    Number(
+      value?.confidence ??
+      value?.score ??
+      0
+    );
+
+
+  if(
+    !Number.isFinite(confidence)
+  ){
+
+    confidence=0;
+
+  }
+
+
+  confidence =
+    Math.max(
+      0,
+      Math.min(
+        100,
+        confidence
+      )
+    );
+
+
+  return {
+
+    action:
+      safeAction,
+
+    confidence:
+      Math.round(
+        confidence
+      ),
+
+    reason:
+      String(
+        value?.reason ||
+        "No reason supplied."
+      )
+
   };
 
-  try {
-    const result =
-      await functionCall();
-
-    state.ai.analysts[key] =
-      result;
-
-    return result;
-  } catch (error) {
-    const failed = {
-      provider:
-        names[key],
-
-      status: 'ERROR',
-
-      action: 'WAIT',
-
-      confidence: 0,
-
-      reason:
-        'AI provider unavailable.',
-
-      model:
-        AI_MODELS[key],
-
-      latency: null,
-
-      error:
-        error.message,
-
-      timestamp:
-        nowISO()
-    };
-
-    state.ai.analysts[key] =
-      failed;
-
-    return failed;
-  }
 }
 
-// ============================================================
-// CONSENSUS
-// ============================================================
 
-function calculateAIConsensus(results) {
-  const active =
-    results.filter(
-      result =>
-        result &&
-        result.status === 'ONLINE'
-    );
+/* =========================================================
+   CONSENSUS
+========================================================= */
 
-  if (!active.length) {
-    state.ai.consensus = {
-      action: 'WAIT',
-      confidence: 0,
-      agreement: 0,
-      buy: 0,
-      sell: 0,
-      wait: 100,
-      activeAnalysts: 0,
-      totalAnalysts: 6,
-      reason:
-        'No AI provider returned a valid analysis.'
+function calculateConsensus(){
+
+  const analysts =
+    Object.values(
+      state.ai
+    )
+      .filter(
+        item =>
+          item &&
+          item.status === "ONLINE"
+      );
+
+
+  if(!analysts.length){
+
+    state.consensus = {
+
+      buy:0,
+
+      sell:0,
+
+      wait:100,
+
+      agreement:0,
+
+      technicalConfirmation:
+        state.technical.decision
+
     };
 
     return;
+
   }
 
-  let buyVotes = 0;
-  let sellVotes = 0;
-  let waitVotes = 0;
 
-  let buyConfidence = 0;
-  let sellConfidence = 0;
-  let waitConfidence = 0;
+  let buy=0;
+  let sell=0;
+  let wait=0;
 
-  for (
-    const result of active
-  ) {
-    if (result.action === 'BUY') {
-      buyVotes++;
-      buyConfidence +=
-        result.confidence;
-    } else if (
-      result.action === 'SELL'
-    ) {
-      sellVotes++;
-      sellConfidence +=
-        result.confidence;
-    } else {
-      waitVotes++;
-      waitConfidence +=
-        result.confidence;
+
+  analysts.forEach(
+    item => {
+
+      if(item.action === "BUY"){
+        buy++;
+      }else if(item.action === "SELL"){
+        sell++;
+      }else{
+        wait++;
+      }
+
     }
-  }
-
-  const total =
-    active.length;
-
-  const candidates = [
-    {
-      action: 'BUY',
-      votes: buyVotes,
-      confidence:
-        buyVotes
-          ? buyConfidence /
-            buyVotes
-          : 0
-    },
-
-    {
-      action: 'SELL',
-      votes: sellVotes,
-      confidence:
-        sellVotes
-          ? sellConfidence /
-            sellVotes
-          : 0
-    },
-
-    {
-      action: 'WAIT',
-      votes: waitVotes,
-      confidence:
-        waitVotes
-          ? waitConfidence /
-            waitVotes
-          : 0
-    }
-  ];
-
-  candidates.sort(
-    (a, b) =>
-      b.votes - a.votes ||
-      b.confidence -
-        a.confidence
   );
 
-  const winner =
-    candidates[0];
+
+  const total =
+    analysts.length;
+
+
+  const buyPercent =
+    Math.round(
+      buy / total * 100
+    );
+
+
+  const sellPercent =
+    Math.round(
+      sell / total * 100
+    );
+
+
+  const waitPercent =
+    Math.max(
+      0,
+      100 -
+      buyPercent -
+      sellPercent
+    );
+
+
+  const strongest =
+    Math.max(
+      buy,
+      sell,
+      wait
+    );
+
 
   const agreement =
     Math.round(
-      winner.votes /
+      strongest /
       total *
       100
     );
 
-  const confidence =
-    Math.round(
-      winner.confidence * 0.6 +
-      agreement * 0.4
-    );
 
-  const buy =
-    Math.round(
-      buyVotes / total * 100
-    );
+  state.consensus = {
 
-  const sell =
-    Math.round(
-      sellVotes / total * 100
-    );
+    buy:
+      buyPercent,
 
-  const wait =
-    Math.max(
-      0,
-      100 - buy - sell
-    );
+    sell:
+      sellPercent,
 
-  state.ai.consensus = {
-    action:
-      winner.action,
-
-    confidence:
-      clamp(
-        confidence,
-        0,
-        100
-      ),
+    wait:
+      waitPercent,
 
     agreement,
 
-    buy,
+    technicalConfirmation:
+      state.technical.decision
 
-    sell,
-
-    wait,
-
-    activeAnalysts:
-      total,
-
-    totalAnalysts:
-      6,
-
-    reason:
-      `${winner.votes}/${total} active AI analysts favor ${winner.action}.`
   };
+
+
+  state.finalDecision =
+    buildFinalDecision();
+
 }
 
-// ============================================================
-// FINAL DECISION
-// ============================================================
 
-function combineTechnicalAndAI() {
-  const ai =
-    state.ai.consensus;
+/* =========================================================
+   REFRESH ANALYSIS
+========================================================= */
 
-  const technical =
-    state.decision.action;
+let aiRunning=false;
 
-  let action = 'WAIT';
 
-  if (
-    ai.agreement >= 67 &&
-    ai.confidence >= 60
-  ) {
-    if (
-      ai.action === 'BUY' &&
-      technical === 'BUY'
-    ) {
-      action = 'BUY';
-    }
+async function refreshAnalysisAI(){
 
-    if (
-      ai.action === 'SELL' &&
-      technical === 'SELL'
-    ) {
-      action = 'SELL';
-    }
-  }
-
-  const confidence =
-    action === 'WAIT'
-      ? Math.min(
-          ai.confidence,
-          state.decision.confidence
-        )
-      : Math.round(
-          ai.confidence * 0.6 +
-          state.decision.confidence * 0.4
-        );
-
-  state.decision = {
-    ...state.decision,
-
-    action,
-
-    confidence:
-      clamp(
-        confidence,
-        0,
-        100
-      ),
-
-    agreement:
-      ai.agreement,
-
-    reason:
-      action === 'BUY'
-        ? 'AI consensus and technical analysis agree on BUY.'
-        : action === 'SELL'
-          ? 'AI consensus and technical analysis agree on SELL.'
-          : 'AI and technical confirmation are insufficient. WAIT.'
-  };
-
-  state.forecast = {
-    direction:
-      action,
-
-    confidence:
-      state.decision.confidence,
-
-    reason:
-      state.decision.reason
-  };
-}
-
-// ============================================================
-// AI SCAN
-// ============================================================
-
-async function runAIConsensus() {
-  if (state.ai.running) {
+  if(aiRunning){
     return;
   }
 
-  if (
-    !state.connected ||
-    state.price === null
-  ) {
+
+  if(
+    !state.mt5.online ||
+    !state.lastMT5Update
+  ){
+
     return;
+
   }
 
-  state.ai.running = true;
 
-  broadcast({
-    type: 'aiStatus',
-    data: state.ai
-  });
+  const age =
+    Date.now() -
+    state.lastMT5Update;
 
-  try {
-    const prompt =
-      buildAIPrompt();
 
-    const tasks = [
-      [
-        'openai',
-        () => callOpenAI(prompt)
-      ],
+  if(age > STALE_DATA_MS){
 
-      [
-        'deepseek',
-        () => callDeepSeek(prompt)
-      ],
+    return;
 
-      [
-        'gemini',
-        () => callGemini(prompt)
-      ],
+  }
 
-      [
-        'groq',
-        () => callGroq(prompt)
-      ],
 
-      [
-        'openrouter',
-        () => callOpenRouter(prompt)
-      ],
+  aiRunning=true;
 
-      [
-        'mistral',
-        () => callMistral(prompt)
-      ]
-    ];
 
-    const results =
-      await Promise.all(
-        tasks.map(
-          ([key, fn]) =>
-            runOneAnalyst(
-              key,
-              fn
-            )
-        )
-      );
+  try{
 
-    calculateAIConsensus(
-      results
-    );
+    await runAIConsensus();
 
-    combineTechnicalAndAI();
+  }catch(error){
 
-    state.ai.lastRun =
-      nowISO();
-
-    broadcast({
-      type: 'analysis',
-      data: {
-        technical:
-          state.technical,
-
-        consensus:
-          state.ai.consensus,
-
-        decision:
-          state.decision
-      }
-    });
-
-    broadcast({
-      type: 'ai',
-      data:
-        state.ai
-    });
-
-    broadcast({
-      type: 'forecast',
-      data:
-        state.forecast
-    });
-
-    broadcast({
-      type: 'log',
-      message:
-        `AI consensus completed: ${state.ai.consensus.action} (${state.ai.consensus.agreement}% agreement).`
-    });
-  } catch (error) {
     console.error(
-      'AI CONSENSUS ERROR:',
+      "AI refresh failed:",
       error
     );
-  } finally {
-    state.ai.running =
-      false;
+
+  }finally{
+
+    aiRunning=false;
+
   }
+
 }
 
-// ============================================================
-// SAFETY
-// ============================================================
 
-function runSafety() {
-  const age =
-    state.lastUpdate
-      ? Date.now() -
-        new Date(
-          state.lastUpdate
-        ).getTime()
-      : Infinity;
-
-  const staleData =
-    age > STALE_DATA_MS;
-
-  const spreadOK =
-    state.spread !== null &&
-    state.spread <=
-      MAX_SPREAD_POINTS;
-
-  const newsRisk =
-    state.news.impact === 'HIGH' &&
-    state.news.status === 'UPCOMING';
-
-  const safe =
-    state.connected &&
-    !staleData &&
-    spreadOK &&
-    !newsRisk;
-
-  let message =
-    'Safety checks passed.';
-
-  if (!state.connected) {
-    message =
-      'MT5 is not connected.';
-  } else if (staleData) {
-    message =
-      'Market data is stale.';
-  } else if (!spreadOK) {
-    message =
-      'Spread check failed.';
-  } else if (newsRisk) {
-    message =
-      'High-impact news risk detected.';
-  }
-
-  state.safety = {
-    safe,
-    spreadOK,
-    staleData,
-    newsRisk,
-    riskOK: true,
-    message
-  };
-}
-
-// ============================================================
-// MT5 NORMALIZATION
-// ============================================================
-
-function normalizeCandle(c) {
-  return {
-    time:
-      c?.time ||
-      c?.timestamp ||
-      Date.now(),
-
-    open:
-      safeNumber(c?.open),
-
-    high:
-      safeNumber(c?.high),
-
-    low:
-      safeNumber(c?.low),
-
-    close:
-      safeNumber(c?.close),
-
-    volume:
-      safeNumber(c?.volume) || 0
-  };
-}
-
-function updateFromMT5(data) {
-  if (
-    !data ||
-    typeof data !== 'object'
-  ) {
-    return;
-  }
-
-  if (data.symbol) {
-    state.symbol =
-      String(data.symbol);
-  }
-
-  if (data.timeframe) {
-    state.timeframe =
-      String(data.timeframe);
-  }
-
-  const price =
-    safeNumber(data.price) ??
-    safeNumber(data.last);
-
-  const bid =
-    safeNumber(data.bid);
-
-  const ask =
-    safeNumber(data.ask);
-
-  if (price !== null) {
-    state.price = price;
-  }
-
-  if (bid !== null) {
-    state.bid = bid;
-  }
-
-  if (ask !== null) {
-    state.ask = ask;
-  }
-
-  if (
-    bid !== null &&
-    ask !== null
-  ) {
-    state.spread =
-      round(
-        Math.abs(
-          ask - bid
-        ),
-        5
-      );
-  } else {
-    const suppliedSpread =
-      safeNumber(
-        data.spread
-      );
-
-    if (
-      suppliedSpread !== null
-    ) {
-      state.spread =
-        suppliedSpread;
-    }
-  }
-
-  state.tickTime =
-    data.time ||
-    data.timestamp ||
-    nowISO();
-
-  state.lastUpdate =
-    nowISO();
-
-  state.connected = true;
-
-  if (
-    Array.isArray(
-      data.candles
-    )
-  ) {
-    state.candles =
-      data.candles
-        .slice(-MAX_CANDLES)
-        .map(
-          normalizeCandle
-        );
-  }
-
-  if (data.candle) {
-    state.candles.push(
-      normalizeCandle(
-        data.candle
-      )
-    );
-
-    state.candles =
-      state.candles.slice(
-        -MAX_CANDLES
-      );
-  }
-
-  calculateTechnicalAnalysis();
-  runTechnicalDecision();
-  runSafety();
-
-  broadcast({
-    type: 'tick',
-    data: {
-      price:
-        state.price,
-
-      bid:
-        state.bid,
-
-      ask:
-        state.ask,
-
-      spread:
-        state.spread,
-
-      time:
-        state.tickTime,
-
-      symbol:
-        state.symbol
-    }
-  });
-
-  broadcast({
-    type: 'candles',
-    data:
-      state.candles.slice(
-        -MAX_CANDLES
-      )
-  });
-
-  broadcast({
-    type: 'analysis',
-    data: {
-      technical:
-        state.technical,
-
-      consensus:
-        state.ai.consensus,
-
-      decision:
-        state.decision
-    }
-  });
-
-  broadcast({
-    type: 'safety',
-    data:
-      state.safety
-  });
-}
-
-// ============================================================
-// MT5 PUSH
-// ============================================================
-
-app.post(
-  '/api/mt5/push',
-  (req, res) => {
-    const secret =
-      req.headers['x-mt5-secret'] ||
-      req.body?.secret;
-
-    if (
-      !constantTimeEqual(
-        secret,
-        MT5_BRIDGE_SECRET
-      )
-    ) {
-      return res
-        .status(401)
-        .json({
-          ok: false,
-          success: false,
-          error:
-            'Invalid MT5 bridge secret.'
-        });
-    }
-
-    try {
-      updateFromMT5(
-        req.body
-      );
-
-      return res.json({
-        ok: true,
-        success: true,
-        message:
-          'MT5 data received.'
-      });
-    } catch (error) {
-      console.error(
-        'MT5 PUSH ERROR:',
-        error
-      );
-
-      return res
-        .status(400)
-        .json({
-          ok: false,
-          success: false,
-          error:
-            'Invalid MT5 data.'
-        });
-    }
-  }
-);
-
-// ============================================================
-// LOGIN
-// ============================================================
-
-app.post(
-  '/api/login',
-  (req, res) => {
-    try {
-      const password =
-        req.body?.password;
-
-      if (
-        !constantTimeEqual(
-          password,
-          BOT_PASSWORD
-        )
-      ) {
-        return res
-          .status(401)
-          .json({
-            ok: false,
-            success: false,
-            message:
-              'Invalid password.',
-            error:
-              'Invalid password.'
-          });
-      }
-
-      const token =
-        crypto
-          .randomBytes(32)
-          .toString('hex');
-
-      return res.json({
-        ok: true,
-        success: true,
-        authenticated: true,
-        token,
-        message:
-          'Login successful.'
-      });
-    } catch (error) {
-      console.error(
-        'LOGIN ERROR:',
-        error
-      );
-
-      return res
-        .status(500)
-        .json({
-          ok: false,
-          success: false,
-          message:
-            'Login server error.'
-        });
-    }
-  }
-);
-
-// ============================================================
-// DASHBOARD API
-// ============================================================
-
-app.get(
-  '/api/dashboard',
-  (req, res) => {
-    try {
-      runSafety();
-
-      return res.json({
-        ok: true,
-        success: true,
-        data:
-          publicState()
-      });
-    } catch (error) {
-      console.error(
-        'DASHBOARD ERROR:',
-        error
-      );
-
-      return res
-        .status(500)
-        .json({
-          ok: false,
-          success: false,
-          error:
-            'Dashboard data error.'
-        });
-    }
-  }
-);
-
-// ============================================================
-// AI STATUS
-// ============================================================
-
-app.get(
-  '/api/ai/status',
-  (req, res) => {
-    return res.json({
-      ok: true,
-      success: true,
-
-      providers:
-        state.ai.analysts,
-
-      consensus:
-        state.ai.consensus,
-
-      models:
-        AI_MODELS
-    });
-  }
-);
-
-// ============================================================
-// MANUAL AI SCAN
-// ============================================================
-
-app.post(
-  '/api/ai/scan',
-  async (req, res) => {
-    try {
-      await runAIConsensus();
-
-      return res.json({
-        ok: true,
-        success: true,
-
-        data: {
-          analysts:
-            state.ai.analysts,
-
-          consensus:
-            state.ai.consensus,
-
-          decision:
-            state.decision
-        }
-      });
-    } catch (error) {
-      console.error(
-        'AI SCAN ERROR:',
-        error
-      );
-
-      return res
-        .status(500)
-        .json({
-          ok: false,
-          success: false,
-          error:
-            error.message
-        });
-    }
-  }
-);
-
-// ============================================================
-// HEALTH
-// ============================================================
-
-app.get(
-  '/health',
-  (req, res) => {
-    const configured = {
-      openai:
-        Boolean(
-          API_KEYS.openai
-        ),
-
-      deepseek:
-        Boolean(
-          API_KEYS.deepseek
-        ),
-
-      gemini:
-        Boolean(
-          API_KEYS.gemini
-        ),
-
-      groq:
-        Boolean(
-          API_KEYS.groq
-        ),
-
-      openrouter:
-        Boolean(
-          API_KEYS.openrouter
-        ),
-
-      mistral:
-        Boolean(
-          API_KEYS.mistral
-        )
-    };
-
-    return res.json({
-      ok: true,
-      success: true,
-
-      service:
-        'MT5 FOREX AI ANALYZER V12',
-
-      version:
-        '12.0.3',
-
-      mt5Connected:
-        state.connected,
-
-      aiProviders:
-        configured,
-
-      activeAI:
-        Object.values(
-          state.ai.analysts
-        ).filter(
-          analyst =>
-            analyst.status ===
-            'ONLINE'
-        ).length,
-
-      lastUpdate:
-        state.lastUpdate,
-
-      uptime:
-        process.uptime(),
-
-      time:
-        nowISO()
-    });
-  }
-);
-
-// ============================================================
-// WEBSOCKET
-// ============================================================
+/* =========================================================
+   WEBSOCKET
+========================================================= */
 
 wss.on(
-  'connection',
-  ws => {
-    state.clients.add(ws);
+  "connection",
+  (ws, req) => {
 
-    console.log(
-      `📱 Dashboard connected. Clients: ${state.clients.size}`
-    );
+    ws.isAlive=true;
 
-    send(ws, {
-      type: 'connected',
-      data:
-        publicState()
-    });
+    ws.symbol =
+      state.mt5.symbol;
+
+    ws.timeframe =
+      state.mt5.timeframe;
+
 
     ws.on(
-      'message',
-      async raw => {
-        try {
+      "pong",
+      () => {
+
+        ws.isAlive=true;
+
+      }
+    );
+
+
+    ws.send(
+      JSON.stringify({
+
+        type:"dashboard",
+
+        data:
+          buildDashboard()
+
+      })
+    );
+
+
+    ws.send(
+      JSON.stringify({
+
+        type:"log",
+
+        level:"info",
+
+        message:
+          "WebSocket connected."
+
+      })
+    );
+
+
+    ws.on(
+      "message",
+      raw => {
+
+        try{
+
           const message =
             JSON.parse(
               raw.toString()
             );
 
-          await handleClientMessage(
-            ws,
-            message
+
+          if(
+            message.type ===
+            "subscribe"
+          ){
+
+            if(
+              message.symbol
+            ){
+
+              ws.symbol =
+                String(
+                  message.symbol
+                );
+
+            }
+
+
+            if(
+              message.timeframe
+            ){
+
+              ws.timeframe =
+                String(
+                  message.timeframe
+                );
+
+            }
+
+
+            ws.send(
+              JSON.stringify({
+
+                type:"dashboard",
+
+                data:
+                  buildDashboard()
+
+              })
+            );
+
+
+            return;
+
+          }
+
+
+          if(
+            message.type ===
+            "ping"
+          ){
+
+            ws.send(
+              JSON.stringify({
+
+                type:"pong",
+
+                time:
+                  Date.now()
+
+              })
+            );
+
+          }
+
+        }catch(error){
+
+          ws.send(
+            JSON.stringify({
+
+              type:"log",
+
+              level:"error",
+
+              message:
+                "Invalid WebSocket message."
+
+            })
           );
-        } catch (error) {
-          send(ws, {
-            type: 'error',
-            message:
-              error.message ||
-              'Invalid WebSocket message.'
-          });
+
         }
+
       }
     );
 
+
     ws.on(
-      'close',
+      "close",
       () => {
-        state.clients.delete(ws);
 
-        console.log(
-          `📱 Dashboard disconnected. Clients: ${state.clients.size}`
-        );
+        ws.isAlive=false;
+
       }
     );
 
+
     ws.on(
-      'error',
+      "error",
       error => {
+
         console.error(
-          'WebSocket error:',
+          "WebSocket error:",
           error.message
         );
+
       }
     );
+
   }
 );
 
-// ============================================================
-// CLIENT COMMANDS
-// ============================================================
 
-async function handleClientMessage(
-  ws,
-  message
-) {
-  if (
-    !message ||
-    typeof message !== 'object'
-  ) {
-    send(ws, {
-      type: 'error',
-      message:
-        'Invalid command.'
-    });
+/* =========================================================
+   WEBSOCKET HEARTBEAT
+========================================================= */
 
-    return;
-  }
+const heartbeat =
+  setInterval(
+    () => {
 
-  switch (
-    message.type
-  ) {
-    case 'subscribe': {
-      if (message.symbol) {
-        state.symbol =
-          String(
-            message.symbol
-          );
-      }
+      wss.clients.forEach(
+        ws => {
 
-      if (message.timeframe) {
-        state.timeframe =
-          String(
-            message.timeframe
-          );
-      }
+          if(
+            ws.isAlive === false
+          ){
 
-      if (message.mode) {
-        state.mode =
-          String(
-            message.mode
-          );
-      }
+            return ws.terminate();
 
-      send(ws, {
-        type: 'connected',
-        data:
-          publicState()
-      });
+          }
 
-      broadcast({
-        type: 'log',
-        message:
-          `Subscribed to ${state.symbol} ${state.timeframe}.`
-      });
 
-      break;
-    }
+          ws.isAlive=false;
 
-    case 'scan': {
-      calculateTechnicalAnalysis();
-      runTechnicalDecision();
-      runSafety();
+          try{
 
-      await runAIConsensus();
+            ws.ping();
 
-      break;
-    }
+          }catch(error){
 
-    case 'ai_scan': {
-      await runAIConsensus();
+            ws.terminate();
 
-      break;
-    }
+          }
 
-    case 'stop': {
-      state.decision = {
-        ...state.decision,
-
-        action: 'WAIT',
-
-        confidence: 0,
-
-        reason:
-          'Scanner stopped.'
-      };
-
-      broadcast({
-        type: 'analysis',
-
-        data: {
-          technical:
-            state.technical,
-
-          consensus:
-            state.ai.consensus,
-
-          decision:
-            state.decision
         }
-      });
-
-      break;
-    }
-
-    case 'alert': {
-      broadcast({
-        type: 'log',
-
-        message:
-          String(
-            message.message ||
-            'Analyzer alert.'
-          ).slice(0, 500)
-      });
-
-      break;
-    }
-
-    case 'paper_trade': {
-      if (
-        state.price === null
-      ) {
-        send(ws, {
-          type: 'error',
-          message:
-            'No live MT5 price available.'
-        });
-
-        return;
-      }
-
-      const direction =
-        String(
-          message.action ||
-          state.decision.action
-        ).toUpperCase();
-
-      if (
-        !['BUY', 'SELL']
-          .includes(direction)
-      ) {
-        send(ws, {
-          type: 'error',
-          message:
-            'Paper trade requires BUY or SELL.'
-        });
-
-        return;
-      }
-
-      const position = {
-        id:
-          `PAPER-${Date.now()}`,
-
-        symbol:
-          state.symbol,
-
-        type:
-          direction,
-
-        volume:
-          safeNumber(
-            message.volume
-          ) || 0.01,
-
-        entry:
-          state.price,
-
-        stopLoss:
-          state.decision.stopLoss,
-
-        takeProfit:
-          state.decision.takeProfit,
-
-        status:
-          'PAPER',
-
-        openedAt:
-          nowISO()
-      };
-
-      state.positions.push(
-        position
       );
 
-      state.positions =
-        state.positions.slice(-100);
+    },
+    30000
+  );
 
-      broadcast({
-        type: 'positions',
 
-        data:
-          state.positions
-      });
+wss.on(
+  "close",
+  () => {
 
-      break;
-    }
+    clearInterval(
+      heartbeat
+    );
 
-    case 'execute': {
-      send(ws, {
-        type: 'error',
-
-        message:
-          'LIVE EXECUTION is locked. V12 is analysis/paper-trading only.'
-      });
-
-      break;
-    }
-
-    default: {
-      send(ws, {
-        type: 'error',
-
-        message:
-          `Unknown command: ${message.type}`
-      });
-    }
   }
+);
+
+
+/* =========================================================
+   BROADCAST
+========================================================= */
+
+function broadcast(message){
+
+  const payload =
+    JSON.stringify(
+      message
+    );
+
+
+  wss.clients.forEach(
+    ws => {
+
+      if(
+        ws.readyState ===
+        WebSocket.OPEN
+      ){
+
+        try{
+
+          ws.send(payload);
+
+        }catch(error){
+
+          console.error(
+            "Broadcast error:",
+            error.message
+          );
+
+        }
+
+      }
+
+    }
+  );
+
 }
 
-// ============================================================
-// AUTOMATIC AI REFRESH
-// ============================================================
 
-let lastAutomaticAI = 0;
+/* =========================================================
+   BROADCAST DASHBOARD
+========================================================= */
 
-setInterval(
-  async () => {
-    if (
-      !state.connected ||
-      state.price === null ||
-      state.ai.running
-    ) {
-      return;
-    }
+function broadcastDashboard(){
 
-    const current =
-      Date.now();
+  broadcast({
 
-    if (
-      current -
-      lastAutomaticAI <
-      AI_REFRESH_MS
-    ) {
-      return;
-    }
+    type:"dashboard",
 
-    lastAutomaticAI =
-      current;
+    data:
+      buildDashboard()
 
-    try {
-      await runAIConsensus();
-    } catch (error) {
-      console.error(
-        'Automatic AI error:',
-        error.message
-      );
-    }
-  },
-  5000
-);
+  });
 
-// ============================================================
-// CONNECTION WATCHDOG
-// ============================================================
+}
+
+
+/* =========================================================
+   MT5 WATCHDOG
+========================================================= */
 
 setInterval(
   () => {
-    try {
-      runSafety();
 
-      const stale =
-        !state.lastUpdate ||
-        Date.now() -
-          new Date(
-            state.lastUpdate
-          ).getTime() >
-          STALE_DATA_MS;
+    if(
+      state.lastMT5Update &&
+      Date.now() -
+      state.lastMT5Update >
+      STALE_DATA_MS
+    ){
 
-      if (
-        stale &&
-        state.connected
-      ) {
-        state.connected =
-          false;
+      state.mt5.online=false;
 
-        state.safety = {
-          safe: false,
-          spreadOK: false,
-          staleData: true,
-          newsRisk: false,
-          riskOK: true,
-          message:
-            'MT5 data connection is stale.'
-        };
+      state.mt5.connected=false;
 
-        broadcast({
-          type: 'error',
-          message:
-            'MT5 live feed disconnected or stale.'
-        });
+      refreshSafety();
 
-        broadcast({
-          type: 'safety',
-          data:
-            state.safety
-        });
-      }
-    } catch (error) {
-      console.error(
-        'WATCHDOG ERROR:',
-        error.message
-      );
+
+      broadcast({
+
+        type:"mt5",
+
+        data:
+          state.mt5
+
+      });
+
+
+      broadcast({
+
+        type:"dashboard",
+
+        data:
+          buildDashboard()
+
+      });
+
     }
+
   },
   5000
 );
 
-// ============================================================
-// ROOT PAGE
-// ============================================================
 
-app.get(
-  '/',
-  (req, res) => {
-    res.setHeader(
-      'Cache-Control',
-      'no-store, no-cache, must-revalidate, proxy-revalidate'
-    );
+/* =========================================================
+   AI REFRESH TIMER
+========================================================= */
 
-    res.setHeader(
-      'Pragma',
-      'no-cache'
-    );
+setInterval(
+  () => {
 
-    res.setHeader(
-      'Expires',
-      '0'
-    );
+    refreshAnalysisAI();
 
-    res.sendFile(
-      INDEX_FILE,
-      error => {
-        if (error) {
-          console.error(
-            'INDEX FILE ERROR:',
-            error
-          );
+  },
+  AI_REFRESH_MS
+);
 
-          if (!res.headersSent) {
-            res
-              .status(500)
-              .type('text/plain')
-              .send(
-                'MT5 FOREX AI ANALYZER V12: public/index.html was not found.'
-              );
-          }
-        }
-      }
-    );
+
+/* =========================================================
+   NEWS PLACEHOLDER ENGINE
+========================================================= */
+
+function updateNewsEngine(){
+
+  /*
+   * This section intentionally does not invent economic
+   * calendar events. A real calendar/news adapter should
+   * populate state.news.events.
+   */
+
+  if(
+    !Array.isArray(
+      state.news.events
+    )
+  ){
+
+    state.news.events=[];
+
   }
+
+
+  state.news.mode =
+    "MONITOR";
+
+
+  state.safety.newsRisk =
+    state.news.events.length
+      ? "EVENTS DETECTED"
+      : "UNKNOWN";
+
+}
+
+
+setInterval(
+  () => {
+
+    updateNewsEngine();
+
+  },
+  30000
 );
 
-// ============================================================
-// STATIC FILES
-// ============================================================
 
-app.use(
-  express.static(
-    PUBLIC_DIR,
-    {
-      index: false,
+/* =========================================================
+   UTILITY
+========================================================= */
 
-      setHeaders: res => {
-        res.setHeader(
-          'Cache-Control',
-          'no-store'
-        );
-      }
-    }
-  )
-);
+function roundNumber(value){
 
-// ============================================================
-// SAFE FALLBACK
-// ============================================================
-
-app.use(
-  (req, res) => {
-    if (
-      req.method !== 'GET'
-    ) {
-      return res
-        .status(404)
-        .json({
-          ok: false,
-          success: false,
-          error:
-            'Route not found.'
-        });
-    }
-
-    res.sendFile(
-      INDEX_FILE,
-      error => {
-        if (error) {
-          console.error(
-            'FALLBACK ERROR:',
-            error
-          );
-
-          if (!res.headersSent) {
-            res
-              .status(404)
-              .type('text/plain')
-              .send(
-                'Dashboard file not found.'
-              );
-          }
-        }
-      }
-    );
+  if(!Number.isFinite(value)){
+    return null;
   }
-);
 
-// ============================================================
-// ERROR HANDLER
-// ============================================================
 
-app.use(
-  (error, req, res, next) => {
+  return Number(
+    value.toFixed(5)
+  );
+
+}
+
+
+function roundPrice(value){
+
+  if(!Number.isFinite(value)){
+    return null;
+  }
+
+
+  const symbol =
+    String(
+      state.mt5.symbol || ""
+    ).toUpperCase();
+
+
+  const digits =
+    symbol.includes("JPY")
+      ? 3
+      : symbol.includes("XAU")
+        ? 2
+        : 5;
+
+
+  return Number(
+    value.toFixed(
+      digits
+    )
+  );
+
+}
+
+
+/* =========================================================
+   PROCESS EVENTS
+========================================================= */
+
+process.on(
+  "uncaughtException",
+  error => {
+
     console.error(
-      'SERVER ERROR:',
+      "UNCAUGHT EXCEPTION:",
       error
     );
 
-    if (
-      res.headersSent
-    ) {
-      return next(error);
-    }
-
-    res
-      .status(500)
-      .json({
-        ok: false,
-        success: false,
-        error:
-          'Internal server error.'
-      });
   }
 );
 
-// ============================================================
-// START
-// ============================================================
+
+process.on(
+  "unhandledRejection",
+  reason => {
+
+    console.error(
+      "UNHANDLED REJECTION:",
+      reason
+    );
+
+  }
+);
+
+
+/* =========================================================
+   START
+========================================================= */
 
 server.listen(
   PORT,
-  '0.0.0.0',
+  "0.0.0.0",
   () => {
-    console.log('');
-    console.log(
-      '=============================================='
-    );
 
     console.log(
-      '🔥 MT5 FOREX AI ANALYZER V12.0.3'
+      "================================================="
     );
 
     console.log(
-      'POWERED BY ELISY ANALYSIS DEVELOPER'
+      "🔥 MT5 FOREX AI ANALYZER V12"
     );
 
     console.log(
-      '=============================================='
+      "POWERED BY ELISY ANALYSIS DEVELOPER"
     );
 
     console.log(
-      `🚀 PORT: ${PORT}`
+      "================================================="
     );
 
     console.log(
-      '📊 DASHBOARD: /'
+      "Server version:",
+      SERVER_VERSION
     );
 
     console.log(
-      '❤️ HEALTH: /health'
+      "Frontend version:",
+      FRONTEND_VERSION
     );
 
     console.log(
-      '📡 WEBSOCKET: /ws'
+      "Port:",
+      PORT
     );
 
     console.log(
-      '📥 MT5 PUSH: /api/mt5/push'
+      "Public directory:",
+      PUBLIC_DIR
     );
 
     console.log(
-      '🤖 AI PROVIDERS: 6'
+      "Index file:",
+      INDEX_FILE
     );
 
     console.log(
-      `📁 PUBLIC: ${PUBLIC_DIR}`
+      "WebSocket:",
+      "/ws"
     );
 
     console.log(
-      `📄 INDEX: ${INDEX_FILE}`
+      "MT5 bridge:",
+      MT5_BRIDGE_SECRET
+        ? "SECRET ENABLED"
+        : "SECRET NOT CONFIGURED"
     );
 
     console.log(
-      '=============================================='
+      "AI providers:",
+      Object.keys(AI_CONFIG).join(", ")
     );
-  }
-);
 
-// ============================================================
-// PROCESS SAFETY
-// ============================================================
-
-process.on(
-  'uncaughtException',
-  error => {
-    console.error(
-      'UNCAUGHT EXCEPTION:',
-      error
+    console.log(
+      "================================================="
     );
-  }
-);
 
-process.on(
-  'unhandledRejection',
-  reason => {
-    console.error(
-      'UNHANDLED REJECTION:',
-      reason
-    );
   }
 );
